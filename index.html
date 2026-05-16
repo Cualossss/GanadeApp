@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GanaderApp — Gestión Ganadera con Aretes QR</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde: #1A3D2B;
+  --verde-m: #2D6A4F;
+  --verde-h: #14311f;
+  --crema: #F6F1E9;
+  --crema-d: #E9E2D4;
+  --terracota: #C4622D;
+  --gris: #6B7280;
+  --gris-c: #D1D5DB;
+  --blanco: #FFFFFF;
+  --sombra: rgba(26,61,43,0.1);
+  --r: 12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--crema);color:#1a1a1a;min-height:100vh}
+
+/* ---- NAV ---- */
+#main-nav{background:var(--verde);padding:0 2rem;display:none;align-items:center;justify-content:space-between;height:62px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.15)}
+.nav-logo{font-family:'Playfair Display',serif;color:var(--crema);font-size:1.4rem;letter-spacing:.02em;cursor:pointer}
+.nav-logo span{color:#8FD5A6}
+.nav-actions{display:flex;align-items:center;gap:.75rem}
+.role-badge{font-size:.72rem;padding:4px 12px;border-radius:20px;font-weight:600;letter-spacing:.04em}
+.role-admin{background:#8FD5A6;color:#0D2419}
+.role-lector{background:#F5C842;color:#4A2E00}
+.btn-logout{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:6px 14px;border-radius:6px;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-logout:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* ---- VIEWS ---- */
+.view{display:none}
+.view.active{display:block}
+#view-login.active{display:flex}
+
+/* ---- LOGIN ---- */
+#view-login{align-items:center;justify-content:center;min-height:100vh;background:var(--verde);position:relative;overflow:hidden}
+#view-login::before{content:'';position:absolute;top:-40%;right:-15%;width:550px;height:550px;border-radius:50%;background:rgba(45,106,79,.25);pointer-events:none}
+#view-login::after{content:'';position:absolute;bottom:-25%;left:-10%;width:400px;height:400px;border-radius:50%;background:rgba(20,80,50,.2);pointer-events:none}
+.login-card{background:#fff;border-radius:24px;padding:2.75rem 2.5rem;width:440px;max-width:92vw;position:relative;z-index:10;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+.login-logo{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde);margin-bottom:.3rem}
+.login-logo span{color:var(--terracota)}
+.login-sub{color:var(--gris);font-size:.88rem;margin-bottom:1.75rem;line-height:1.5}
+.login-opts{display:flex;flex-direction:column;gap:1rem}
+.login-opt{border-radius:var(--r);border:2px solid;padding:1.2rem 1.5rem;cursor:pointer;transition:all .22s;text-align:left;width:100%}
+.login-opt.admin{border-color:var(--verde);background:var(--verde);color:#fff}
+.login-opt.admin:hover{background:var(--verde-h)}
+.login-opt.lector{border-color:var(--gris-c);background:#fff;color:#333}
+.login-opt.lector:hover{border-color:var(--verde-m);background:var(--crema)}
+.opt-title{font-weight:600;font-size:.95rem;margin-bottom:3px;display:flex;align-items:center;gap:.4rem}
+.opt-desc{font-size:.78rem;opacity:.75}
+.pw-modal{display:none;background:var(--crema);border-radius:10px;padding:1.1rem;margin-top:.5rem}
+.pw-modal.show{display:block}
+.err-msg{color:#DC2626;font-size:.78rem;margin:.25rem 0 .5rem;display:none}
+.err-msg.show{display:block}
+
+/* ---- INPUTS & BUTTONS ---- */
+.inp{width:100%;padding:10px 14px;border:1.5px solid var(--gris-c);border-radius:8px;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:border-color .2s;background:#fff}
+.inp:focus{outline:none;border-color:var(--verde)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid transparent}
+.btn-p{background:var(--verde);color:#fff;border-color:var(--verde)}
+.btn-p:hover{background:var(--verde-h)}
+.btn-s{background:transparent;color:var(--verde);border-color:var(--verde)}
+.btn-s:hover{background:var(--crema-d)}
+.btn-d{background:#DC2626;color:#fff;border-color:#DC2626}
+.btn-d:hover{background:#B91C1C}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.35)}
+.btn-ghost:hover{background:rgba(255,255,255,.2)}
+.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:6px}
+
+/* ---- CONTAINER ---- */
+.container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--gris);cursor:pointer;font-size:.88rem;margin-bottom:1.5rem;transition:color .2s;background:none;border:none;font-family:'DM Sans',sans-serif;padding:0}
+.back-btn:hover{color:var(--verde)}
+
+/* ---- DASHBOARD ---- */
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem}
+.dash-title{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:1rem;margin-bottom:1.75rem}
+.stat-card{background:var(--blanco);border-radius:var(--r);padding:1.2rem 1.5rem;border:1px solid var(--crema-d)}
+.stat-label{font-size:.72rem;color:var(--gris);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
+.stat-value{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde);line-height:1}
+
+/* ---- CATTLE GRID ---- */
+.cattle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:1.2rem}
+.cc{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer}
+.cc:hover{transform:translateY(-3px);box-shadow:0 8px 28px var(--sombra)}
+.cc-head{background:var(--verde);padding:1.2rem 1.5rem;position:relative}
+.cc-id{font-size:.65rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.cc-name{font-family:'Playfair Display',serif;color:#fff;font-size:1.4rem}
+.cc-icon{position:absolute;right:1.2rem;top:50%;transform:translateY(-50%);width:38px;height:38px;background:rgba(255,255,255,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+.cc-body{padding:1.2rem 1.5rem}
+.cc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem}
+.ccs{text-align:center}
+.ccs-v{font-weight:600;font-size:1.05rem;color:var(--verde)}
+.ccs-l{font-size:.68rem;color:var(--gris);margin-top:2px}
+.cc-actions{display:flex;gap:.5rem;border-top:1px solid var(--crema-d);padding-top:.9rem}
+
+/* ---- EMPTY ---- */
+.empty{text-align:center;padding:3.5rem 2rem;color:var(--gris);grid-column:1/-1}
+.empty-icon{font-size:2.8rem;margin-bottom:.75rem}
+.empty-title{font-size:1.1rem;font-weight:500;margin-bottom:.4rem}
+
+/* ---- FORM VIEW ---- */
+.form-card{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);padding:2rem;max-width:620px}
+.form-title{font-family:'Playfair Display',serif;font-size:1.75rem;color:var(--verde);margin-bottom:1.5rem}
+.form-grp{margin-bottom:1.1rem}
+.form-lbl{display:block;font-size:.83rem;font-weight:500;color:#333;margin-bottom:.4rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-acts{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap}
+
+/* ---- PERFIL ---- */
+.perf-card{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);overflow:hidden;margin-bottom:1.5rem}
+.perf-head{background:var(--verde);padding:2rem;color:#fff}
+.perf-nombre{font-family:'Playfair Display',serif;font-size:2.4rem;margin-bottom:.15rem}
+.perf-id{font-size:.78rem;opacity:.55;letter-spacing:.08em}
+.perf-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.perf-btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.25rem}
+.cur-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem;padding:1.5rem;border-bottom:1px solid var(--crema-d)}
+.cs{text-align:center;padding:.9rem;background:var(--crema);border-radius:10px}
+.cs-v{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--verde);line-height:1}
+.cs-u{font-size:.75rem;color:var(--gris)}
+.cs-l{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gris);margin-top:4px}
+.hist-section{padding:1.5rem}
+.sect-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--verde)}
+.hist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1rem;margin-bottom:1.5rem}
+.mini-chart{background:var(--crema);border-radius:10px;padding:.9rem}
+.mc-title{font-size:.7rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem}
+.hist-table{width:100%;border-collapse:collapse}
+.hist-table th{text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gris);padding:.5rem .75rem;border-bottom:1px solid var(--crema-d)}
+.hist-table td{padding:.75rem;border-bottom:1px solid var(--crema-d);font-size:.88rem}
+.hist-table tr:last-child td{border-bottom:none}
+.trend{display:inline-flex;align-items:center;gap:2px;font-size:.72rem;padding:2px 7px;border-radius:12px;font-weight:600;margin-left:4px}
+.t-up{background:#DCFCE7;color:#15803D}
+.t-dn{background:#FEE2E2;color:#B91C1C}
+.t-eq{background:#F3F4F6;color:#6B7280}
+
+/* ---- ARETE ---- */
+.arete-wrap{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);padding:2rem;text-align:center}
+.arete-tag{width:170px;height:190px;background:#FFD700;border-radius:50% 50% 48% 48% / 60% 60% 40% 40%;margin:0 auto 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;border:3px solid #E5B800;position:relative}
+.arete-tag::before{content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:14px;height:14px;background:#CC9900;border-radius:50%;box-shadow:0 0 0 3px #E5B800}
+.tag-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#4A2E00;text-align:center;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
+.tag-id{font-size:.58rem;color:#7A5000;letter-spacing:.06em;margin-bottom:6px}
+.arete-acts{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+.full-arete-page{max-width:420px;margin:0 auto}
+.arete-info-box{margin-top:1.2rem;padding:.9rem;background:var(--crema);border-radius:8px;text-align:left;font-size:.88rem;line-height:1.8;color:#333}
+
+/* ---- MODALS ---- */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center;padding:1rem}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:18px;padding:2rem;max-width:440px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:.4rem}
+.modal-sub{color:var(--gris);font-size:.88rem;margin-bottom:1.5rem;line-height:1.5}
+.modal-acts{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem}
+
+/* ---- PRINT ---- */
+@media print{
+  #main-nav,.back-btn,.arete-acts,.perf-btns,#admin-head-btn,.hist-section,.cur-stats,.perf-btns{display:none!important}
+  body{background:#fff}
+  .arete-wrap{border:none;box-shadow:none}
+  .arete-tag{width:220px;height:250px}
+}
+
+@media(max-width:600px){
+  .form-row{grid-template-columns:1fr}
+  .perf-nombre{font-size:1.7rem}
+  .cur-stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="view-login" class="view active">
+  <div class="login-card">
+    <div class="login-logo">Ganade<span>App</span></div>
+    <p class="login-sub">Sistema de Gestión Ganadera con Aretes QR<br>Registra, rastrea y etiqueta tu ganado fácilmente.</p>
+    <div class="login-opts">
+      <!-- ADMIN -->
+      <button class="login-opt admin" onclick="togglePW()">
+        <div class="opt-title">🔐 Administrador / Editor</div>
+        <div class="opt-desc">Crear, editar y gestionar toda la información del ganado</div>
+      </button>
+      <div class="pw-modal" id="pw-modal">
+        <input type="password" id="pw-inp" class="inp" placeholder="Contraseña de administrador" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="err-msg" id="pw-err">Contraseña incorrecta. Intenta de nuevo.</div>
+        <button class="btn btn-p btn-sm" onclick="doLogin()" style="margin-top:.4rem">Ingresar →</button>
+        <p style="font-size:.72rem;color:var(--gris);margin-top:.6rem">Contraseña de prueba: <strong>ganadero123</strong></p>
+      </div>
+      <!-- LECTOR -->
+      <button class="login-opt lector" onclick="setRole('lector')">
+        <div class="opt-title">👁 Lector / Visitante</div>
+        <div class="opt-desc">Solo consultar datos del ganado (sin edición)</div>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NAV ===== -->
+<nav id="main-nav">
+  <div class="nav-logo" onclick="showDash()">Ganade<span>App</span></div>
+  <div class="nav-actions">
+    <span class="role-badge" id="role-badge"></span>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+</nav>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="view-dash" class="view">
+  <div class="container">
+    <div class="dash-header">
+      <h1 class="dash-title">Mi Ganado</h1>
+      <div id="admin-head-btn"></div>
+    </div>
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="cattle-grid" id="cattle-grid"></div>
+  </div>
+</div>
+
+<!-- ===== FORM ===== -->
+<div id="view-form" class="view">
+  <div class="container">
+    <button class="back-btn" onclick="showDash()">← Volver al listado</button>
+    <div class="form-card">
+      <h2 class="form-title" id="form-title">Nueva Vaca</h2>
+      <input type="hidden" id="f-id">
+      <div class="form-grp">
+        <label class="form-lbl">Nombre de la vaca *</label>
+        <input type="text" class="inp" id="f-nombre" placeholder="Ej: Lucera, Princesa, Betsy…">
+      </div>
+      <div class="form-row">
+        <div class="form-grp">
+          <label class="form-lbl">Raza (opcional)</label>
+          <input type="text" class="inp" id="f-raza" placeholder="Ej: Holstein">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Edad (años)</label>
+          <input type="number" class="inp" id="f-edad" min="0" max="30" step="0.5" placeholder="Ej: 3">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grp">
+          <label class="form-lbl">Estatura (cm)</label>
+          <input type="number" class="inp" id="f-estatura" min="50" max="250" placeholder="Ej: 145">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Peso (kg)</label>
+          <input type="number" class="inp" id="f-peso" min="1" max="2000" placeholder="Ej: 450">
+        </div>
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">Notas del registro (opcional)</label>
+        <input type="text" class="inp" id="f-notas" placeholder="Observaciones iniciales…">
+      </div>
+      <div class="form-acts">
+        <button class="btn btn-p" onclick="saveVaca()">💾 Guardar</button>
+        <button class="btn btn-s" onclick="showDash()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PERFIL ===== -->
+<div id="view-perf" class="view">
+  <div class="container">
+    <button class="back-btn" onclick="showDash()">← Volver al listado</button>
+    <div class="perf-card">
+      <div class="perf-head">
+        <div class="perf-top">
+          <div>
+            <div class="perf-id" id="p-id"></div>
+            <div class="perf-nombre" id="p-nombre"></div>
+            <div style="font-size:.88rem;opacity:.7;margin-top:3px" id="p-raza"></div>
+          </div>
+          <div class="perf-btns" id="p-btns"></div>
+        </div>
+      </div>
+      <div class="cur-stats" id="p-stats"></div>
+      <div class="hist-section">
+        <div class="hist-header">
+          <h3 class="sect-title">Histórico de registros</h3>
+          <div id="add-reg-btn"></div>
+        </div>
+        <div class="charts-grid" id="charts-grid"></div>
+        <div style="overflow-x:auto">
+          <table class="hist-table">
+            <thead><tr>
+              <th>Fecha</th><th>Edad</th><th>Estatura</th><th>Peso</th><th>Notas</th>
+            </tr></thead>
+            <tbody id="hist-tbody"></tbody>
+          </table>
+        </div>
+        <div id="no-hist" style="text-align:center;color:var(--gris);padding:2rem;display:none">
+          <div style="font-size:1.5rem;margin-bottom:.4rem">📋</div>
+          Sin registros históricos aún
+        </div>
+      </div>
+    </div>
+    <!-- Arete preview -->
+    <div class="arete-wrap" id="arete-prev-sec">
+      <h3 class="sect-title" style="margin-bottom:1.2rem">Arete / Etiqueta QR</h3>
+      <div class="arete-tag">
+        <div class="tag-name" id="prev-name"></div>
+        <div class="tag-id" id="prev-tagid"></div>
+        <div id="prev-qr"></div>
+      </div>
+      <div class="arete-acts">
+        <button class="btn btn-p" onclick="showArete()">🏷 Ver arete completo</button>
+        <button class="btn btn-s" onclick="copyQRUrl()">📋 Copiar URL QR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARETE FULL ===== -->
+<div id="view-arete" class="view">
+  <div class="container">
+    <button class="back-btn" onclick="showPerf(curId)">← Volver al perfil</button>
+    <div class="full-arete-page">
+      <div class="arete-wrap">
+        <h3 class="sect-title" style="margin-bottom:.4rem">Arete para imprimir</h3>
+        <p style="font-size:.82rem;color:var(--gris);margin-bottom:1.5rem">Imprime y plastifica este arete para colocarlo en la oreja del animal.</p>
+        <div class="arete-tag" style="width:200px;height:220px">
+          <div class="tag-name" id="a-name" style="font-size:1.05rem;max-width:165px"></div>
+          <div class="tag-id" id="a-tagid"></div>
+          <div id="a-qr"></div>
+        </div>
+        <div class="arete-info-box" id="a-info"></div>
+        <div class="arete-acts" style="margin-top:1.4rem">
+          <button class="btn btn-p" onclick="window.print()">🖨 Imprimir arete</button>
+          <button class="btn btn-s" onclick="shareUrl()">📤 Compartir QR</button>
+        </div>
+      </div>
+      <p style="text-align:center;font-size:.8rem;color:var(--gris);margin-top:1.2rem;line-height:1.6">Al escanear el QR con cualquier celular se mostrará<br>el perfil completo del animal con su historial.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: NUEVO REGISTRO ===== -->
+<div class="overlay" id="modal-reg">
+  <div class="modal">
+    <h3 class="modal-title">Nuevo Registro de Medidas</h3>
+    <p class="modal-sub">Agrega una medición al historial del animal para ver su evolución en el tiempo.</p>
+    <div class="form-row" style="margin-bottom:1rem">
+      <div class="form-grp">
+        <label class="form-lbl">Edad (años)</label>
+        <input type="number" class="inp" id="r-edad" min="0" step="0.5" placeholder="Ej: 3.5">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">Estatura (cm)</label>
+        <input type="number" class="inp" id="r-estat" min="0" placeholder="Ej: 145">
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:1rem">
+      <div class="form-grp">
+        <label class="form-lbl">Peso (kg)</label>
+        <input type="number" class="inp" id="r-peso" min="0" placeholder="Ej: 450">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">Fecha</label>
+        <input type="date" class="inp" id="r-fecha">
+      </div>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Notas</label>
+      <input type="text" class="inp" id="r-notas" placeholder="Observaciones de esta medición…">
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-s" onclick="closeM('modal-reg')">Cancelar</button>
+      <button class="btn btn-p" onclick="saveReg()">💾 Guardar registro</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ELIMINAR ===== -->
+<div class="overlay" id="modal-del">
+  <div class="modal">
+    <h3 class="modal-title">¿Eliminar este animal?</h3>
+    <p class="modal-sub">Se eliminarán permanentemente todos los datos e historial de este animal. Esta acción no se puede deshacer.</p>
+    <div class="modal-acts">
+      <button class="btn btn-s" onclick="closeM('modal-del')">Cancelar</button>
+      <button class="btn btn-d" onclick="confirmDel()">Eliminar animal</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ========================= STATE =========================
+let role = null;
+let curId = null;
+let delId = null;
+const PASS = 'ganadero123';
+
+// ========================= DATA =========================
+const get = () => { try { return JSON.parse(localStorage.getItem('gapp') || '[]'); } catch { return []; } };
+const set = d => localStorage.setItem('gapp', JSON.stringify(d));
+const uid = () => 'VAC-' + Date.now().toString(36).toUpperCase().slice(-6);
+const last = v => v.registros && v.registros.length ? v.registros[v.registros.length - 1] : null;
+
+function initDemoData() {
+  if (get().length > 0) return;
+  set([
+    { id: 'VAC-L001', nombre: 'Lucera', raza: 'Holstein', registros: [
+      { fecha: '2022-03-10', edad: 1, estatura: 95, peso: 180, notas: 'Registro inicial' },
+      { fecha: '2022-09-15', edad: 1.5, estatura: 112, peso: 245, notas: 'Buen desarrollo' },
+      { fecha: '2023-03-12', edad: 2, estatura: 128, peso: 320, notas: 'Revisión semestral' },
+      { fecha: '2023-09-20', edad: 2.5, estatura: 137, peso: 385, notas: 'Aumento normal' },
+      { fecha: '2024-03-08', edad: 3, estatura: 144, peso: 430, notas: 'Excelente condición' },
+    ]},
+    { id: 'VAC-P002', nombre: 'Princesa', raza: 'Brahman', registros: [
+      { fecha: '2023-01-05', edad: 0.5, estatura: 75, peso: 120, notas: 'Registro inicial' },
+      { fecha: '2023-07-10', edad: 1, estatura: 98, peso: 195, notas: 'Desarrollo normal' },
+      { fecha: '2024-01-15', edad: 1.5, estatura: 114, peso: 260, notas: 'Revisión anual' },
+    ]},
+    { id: 'VAC-E003', nombre: 'Estrella', raza: 'Simmental', registros: [
+      { fecha: '2021-06-01', edad: 3, estatura: 140, peso: 420, notas: 'Registro inicial' },
+      { fecha: '2022-06-10', edad: 4, estatura: 148, peso: 490, notas: 'Peso estable' },
+      { fecha: '2023-06-15', edad: 5, estatura: 152, peso: 535, notas: 'Excelente condición' },
+      { fecha: '2024-06-20', edad: 6, estatura: 153, peso: 548, notas: 'Mantenimiento' },
+    ]},
+  ]);
+}
+
+// ========================= INIT =========================
+window.addEventListener('load', () => {
+  initDemoData();
+  const hash = location.hash;
+  if (hash.startsWith('#v/')) {
+    const id = hash.replace('#v/', '');
+    role = 'lector';
+    applyRole();
+    showPerf(id);
+  } else {
+    showView('view-login');
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  if (location.hash.startsWith('#v/') && role) {
+    showPerf(location.hash.replace('#v/', ''));
+  }
+});
+
+// ========================= AUTH =========================
+function togglePW() {
+  const m = document.getElementById('pw-modal');
+  m.classList.toggle('show');
+  if (m.classList.contains('show')) setTimeout(() => document.getElementById('pw-inp').focus(), 50);
+}
+function doLogin() {
+  const pw = document.getElementById('pw-inp').value;
+  if (pw === PASS) {
+    document.getElementById('pw-err').classList.remove('show');
+    setRole('admin');
+  } else {
+    document.getElementById('pw-err').classList.add('show');
+    document.getElementById('pw-inp').value = '';
+    document.getElementById('pw-inp').focus();
+  }
+}
+function setRole(r) { role = r; applyRole(); showDash(); }
+function applyRole() {
+  const nav = document.getElementById('main-nav');
+  nav.style.display = 'flex';
+  const b = document.getElementById('role-badge');
+  b.textContent = role === 'admin' ? '⚙ Administrador' : '👁 Lector';
+  b.className = 'role-badge ' + (role === 'admin' ? 'role-admin' : 'role-lector');
+}
+function logout() {
+  role = null; curId = null;
+  document.getElementById('pw-inp').value = '';
+  document.getElementById('pw-modal').classList.remove('show');
+  document.getElementById('pw-err').classList.remove('show');
+  document.getElementById('main-nav').style.display = 'none';
+  location.hash = '';
+  showView('view-login');
+}
+
+// ========================= ROUTING =========================
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function showDash() { location.hash = ''; renderDash(); showView('view-dash'); }
+function showNueva() {
+  document.getElementById('f-id').value = '';
+  document.getElementById('form-title').textContent = 'Nueva Vaca';
+  ['f-nombre','f-raza','f-edad','f-estatura','f-peso','f-notas'].forEach(id => document.getElementById(id).value = '');
+  showView('view-form');
+}
+function showEditar(id) {
+  const v = get().find(x => x.id === id); if (!v) return;
+  const l = last(v);
+  document.getElementById('f-id').value = id;
+  document.getElementById('form-title').textContent = 'Editar: ' + v.nombre;
+  document.getElementById('f-nombre').value = v.nombre;
+  document.getElementById('f-raza').value = v.raza || '';
+  document.getElementById('f-edad').value = l ? l.edad : '';
+  document.getElementById('f-estatura').value = l ? l.estatura : '';
+  document.getElementById('f-peso').value = l ? l.peso : '';
+  document.getElementById('f-notas').value = '';
+  showView('view-form');
+}
+function showPerf(id) {
+  curId = id;
+  location.hash = '#v/' + id;
+  const vacas = get();
+  const v = vacas.find(x => x.id === id);
+  if (!v) { showDash(); return; }
+  const l = last(v);
+
+  document.getElementById('p-id').textContent = v.id;
+  document.getElementById('p-nombre').textContent = v.nombre;
+  document.getElementById('p-raza').textContent = v.raza ? '🐄 ' + v.raza : '';
+
+  // Admin buttons
+  document.getElementById('p-btns').innerHTML = role === 'admin'
+    ? `<button class="btn btn-ghost btn-sm" onclick="showEditar('${id}')">✏ Editar</button>
+       <button class="btn btn-sm" style="background:rgba(220,38,38,.2);border-color:rgba(255,255,255,.35);color:#fff" onclick="delVaca('${id}')">✕ Eliminar</button>`
+    : '';
+
+  document.getElementById('add-reg-btn').innerHTML = role === 'admin'
+    ? `<button class="btn btn-p btn-sm" onclick="openReg()">+ Nuevo registro</button>` : '';
+
+  document.getElementById('p-stats').innerHTML = `
+    <div class="cs"><div class="cs-v">${l ? l.edad : '—'}</div><div class="cs-u">años</div><div class="cs-l">Edad</div></div>
+    <div class="cs"><div class="cs-v">${l ? l.estatura : '—'}</div><div class="cs-u">cm</div><div class="cs-l">Estatura</div></div>
+    <div class="cs"><div class="cs-v">${l ? l.peso : '—'}</div><div class="cs-u">kg</div><div class="cs-l">Peso</div></div>
+    <div class="cs"><div class="cs-v">${v.registros ? v.registros.length : 0}</div><div class="cs-u">entradas</div><div class="cs-l">Historial</div></div>
+  `;
+
+  renderHist(v);
+  renderCharts(v);
+  renderTagPrev(v);
+  showView('view-perf');
+}
+function showArete() {
+  const v = get().find(x => x.id === curId); if (!v) return;
+  const l = last(v);
+  document.getElementById('a-name').textContent = v.nombre;
+  document.getElementById('a-tagid').textContent = v.id;
+  document.getElementById('a-info').innerHTML = l
+    ? `<strong>Raza:</strong> ${v.raza || 'N/D'} &nbsp;·&nbsp; <strong>Edad:</strong> ${l.edad} años<br>
+       <strong>Peso:</strong> ${l.peso} kg &nbsp;·&nbsp; <strong>Estatura:</strong> ${l.estatura} cm`
+    : 'Sin datos registrados aún.';
+  const qc = document.getElementById('a-qr'); qc.innerHTML = '';
+  makeQR(qc, v.id, 90, '#4A2E00', '#FFD700');
+  showView('view-arete');
+}
+
+// ========================= RENDER DASH =========================
+function renderDash() {
+  const vacas = get();
+  const isA = role === 'admin';
+  document.getElementById('admin-head-btn').innerHTML = isA ? `<button class="btn btn-p" onclick="showNueva()">+ Nueva vaca</button>` : '';
+
+  const weights = vacas.map(v => { const l = last(v); return l ? l.peso : 0; }).filter(Boolean);
+  const avgW = weights.length ? Math.round(weights.reduce((a,b) => a+b, 0) / weights.length) : 0;
+  const totalRegs = vacas.reduce((s, v) => s + (v.registros ? v.registros.length : 0), 0);
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total animales</div><div class="stat-value">${vacas.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Peso promedio</div><div class="stat-value">${avgW}<span style="font-size:1rem;color:var(--gris)"> kg</span></div></div>
+    <div class="stat-card"><div class="stat-label">Total registros</div><div class="stat-value">${totalRegs}</div></div>
+  `;
+
+  const g = document.getElementById('cattle-grid');
+  if (!vacas.length) {
+    g.innerHTML = `<div class="empty"><div class="empty-icon">🐄</div><div class="empty-title">Sin animales registrados</div><p style="font-size:.88rem;margin:.4rem 0 1.25rem">Agrega tu primer animal para comenzar</p>${isA ? '<button class="btn btn-p" onclick="showNueva()">+ Agregar primer animal</button>' : ''}</div>`;
+    return;
+  }
+  g.innerHTML = vacas.map(v => {
+    const l = last(v);
+    return `<div class="cc" onclick="showPerf('${v.id}')">
+      <div class="cc-head">
+        <div class="cc-id">${v.id}${v.raza ? ' · ' + v.raza : ''}</div>
+        <div class="cc-name">${v.nombre}</div>
+        <div class="cc-icon">🐄</div>
+      </div>
+      <div class="cc-body">
+        <div class="cc-stats">
+          <div class="ccs"><div class="ccs-v">${l ? l.edad : '—'}</div><div class="ccs-l">años</div></div>
+          <div class="ccs"><div class="ccs-v">${l ? l.estatura : '—'}</div><div class="ccs-l">cm</div></div>
+          <div class="ccs"><div class="ccs-v">${l ? l.peso : '—'}</div><div class="ccs-l">kg</div></div>
+        </div>
+        <div class="cc-actions">
+          <button class="btn btn-s btn-sm" onclick="event.stopPropagation();showPerf('${v.id}')">Ver perfil</button>
+          ${isA ? `<button class="btn btn-s btn-sm" onclick="event.stopPropagation();showEditar('${v.id}')">Editar</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ========================= RENDER HISTORY =========================
+function renderHist(v) {
+  const tbody = document.getElementById('hist-tbody');
+  const noH = document.getElementById('no-hist');
+  const regs = (v.registros || []).slice().reverse();
+  if (!regs.length) { tbody.innerHTML = ''; noH.style.display = 'block'; return; }
+  noH.style.display = 'none';
+  tbody.innerHTML = regs.map((r, i) => {
+    const prev = regs[i + 1];
+    return `<tr>
+      <td>${fmtDate(r.fecha)}</td>
+      <td>${r.edad} años</td>
+      <td>${r.estatura} cm${prev ? badge(r.estatura, prev.estatura, 'cm') : ''}</td>
+      <td>${r.peso} kg${prev ? badge(r.peso, prev.peso, 'kg') : ''}</td>
+      <td style="color:var(--gris);font-size:.82rem">${r.notas || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+function badge(cur, prev, unit) {
+  const d = cur - prev;
+  if (d > 0) return `<span class="trend t-up">▲ +${d} ${unit}</span>`;
+  if (d < 0) return `<span class="trend t-dn">▼ ${d} ${unit}</span>`;
+  return `<span class="trend t-eq">= sin cambio</span>`;
+}
+function fmtDate(s) {
+  if (!s) return '—';
+  return new Date(s + 'T12:00:00').toLocaleDateString('es-CO', { year:'numeric', month:'short', day:'numeric' });
+}
+
+// ========================= CHARTS =========================
+function renderCharts(v) {
+  const cg = document.getElementById('charts-grid');
+  const regs = v.registros || [];
+  if (regs.length < 2) { cg.innerHTML = ''; return; }
+  cg.innerHTML = [
+    { k: 'peso', l: 'Evolución de Peso (kg)', c: '#1A3D2B' },
+    { k: 'estatura', l: 'Evolución de Estatura (cm)', c: '#C4622D' },
+  ].map(({ k, l, c }) => `
+    <div class="mini-chart">
+      <div class="mc-title">${l}</div>
+      ${lineChart(regs, k, c)}
+    </div>
+  `).join('');
+}
+
+function lineChart(regs, key, color) {
+  const W = 230, H = 85, P = 12;
+  const vals = regs.map(r => r[key]);
+  const mn = Math.min(...vals), mx = Math.max(...vals), rng = mx - mn || 1;
+  const pts = vals.map((v, i) => ({
+    x: P + i / (vals.length - 1) * (W - P * 2),
+    y: H - P - (v - mn) / rng * (H - P * 2),
+    v
+  }));
+  const path = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const fill = path + ` L${pts[pts.length-1].x.toFixed(1)},${H-P} L${P},${H-P} Z`;
+  const lp = pts[pts.length - 1];
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">
+    <defs><linearGradient id="g-${key}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${color}" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${fill}" fill="url(#g-${key})"/>
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pts.map(p => `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${color}"/>`).join('')}
+    <text x="${lp.x}" y="${(lp.y - 7).toFixed(1)}" text-anchor="middle" font-size="10" fill="${color}" font-weight="600" font-family="DM Sans,sans-serif">${lp.v}</text>
+  </svg>`;
+}
+
+// ========================= ARETE PREVIEW =========================
+function renderTagPrev(v) {
+  document.getElementById('prev-name').textContent = v.nombre;
+  document.getElementById('prev-tagid').textContent = v.id;
+  const qc = document.getElementById('prev-qr'); qc.innerHTML = '';
+  makeQR(qc, v.id, 62, '#4A2E00', '#FFD700');
+}
+
+function makeQR(container, vacaId, size, dark, light) {
+  const url = location.href.split('#')[0] + '#v/' + vacaId;
+  try {
+    new QRCode(container, { text: url, width: size, height: size, colorDark: dark, colorLight: light, correctLevel: QRCode.CorrectLevel.M });
+  } catch(e) {
+    container.innerHTML = `<div style="width:${size}px;height:${size}px;background:${light};display:flex;align-items:center;justify-content:center;font-size:.6rem;color:${dark}">QR</div>`;
+  }
+}
+
+// ========================= CRUD =========================
+function saveVaca() {
+  const id = document.getElementById('f-id').value;
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
+  const edad = parseFloat(document.getElementById('f-edad').value);
+  const estat = parseFloat(document.getElementById('f-estatura').value);
+  const peso = parseFloat(document.getElementById('f-peso').value);
+  const raza = document.getElementById('f-raza').value.trim();
+  const notas = document.getElementById('f-notas').value.trim();
+  const tieneData = !isNaN(edad) && !isNaN(estat) && !isNaN(peso);
+  const reg = { fecha: today(), edad: edad||0, estatura: estat||0, peso: peso||0, notas: notas || 'Registro inicial' };
+
+  const vacas = get();
+  if (id) {
+    const idx = vacas.findIndex(v => v.id === id);
+    if (idx !== -1) {
+      vacas[idx].nombre = nombre;
+      vacas[idx].raza = raza;
+      if (tieneData) vacas[idx].registros.push(reg);
+    }
+  } else {
+    vacas.push({ id: uid(), nombre, raza, registros: tieneData ? [reg] : [] });
+  }
+  set(vacas);
+  showDash();
+}
+
+function delVaca(id) { delId = id; document.getElementById('modal-del').classList.add('show'); }
+function confirmDel() {
+  if (!delId) return;
+  set(get().filter(v => v.id !== delId));
+  delId = null;
+  closeM('modal-del');
+  showDash();
+}
+
+function openReg() {
+  document.getElementById('r-edad').value = '';
+  document.getElementById('r-estat').value = '';
+  document.getElementById('r-peso').value = '';
+  document.getElementById('r-notas').value = '';
+  document.getElementById('r-fecha').value = today();
+  document.getElementById('modal-reg').classList.add('show');
+}
+function saveReg() {
+  const edad = parseFloat(document.getElementById('r-edad').value);
+  const estat = parseFloat(document.getElementById('r-estat').value);
+  const peso = parseFloat(document.getElementById('r-peso').value);
+  const fecha = document.getElementById('r-fecha').value;
+  const notas = document.getElementById('r-notas').value.trim();
+  if (isNaN(edad)||isNaN(estat)||isNaN(peso)||!fecha) { alert('Completa todos los campos de medidas y la fecha.'); return; }
+  const vacas = get();
+  const idx = vacas.findIndex(v => v.id === curId);
+  if (idx === -1) return;
+  vacas[idx].registros.push({ fecha, edad, estatura: estat, peso, notas });
+  set(vacas);
+  closeM('modal-reg');
+  showPerf(curId);
+}
+
+function closeM(id) { document.getElementById(id).classList.remove('show'); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function copyQRUrl() {
+  const url = location.href.split('#')[0] + '#v/' + curId;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => alert('URL del QR copiada:\n' + url));
+  } else { prompt('URL del QR (cópiala):', url); }
+}
+function shareUrl() {
+  const url = location.href.split('#')[0] + '#v/' + curId;
+  if (navigator.share) { navigator.share({ title: 'GanaderApp', url }); }
+  else { prompt('URL para compartir:', url); }
+}
+</script>
+</body>
+</html>
