@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GanaderApp — Gestión Ganadera con Chapetas QR</title>
+<title>GanaderApp</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --verde:#1A3D2B; --verde-m:#2D6A4F; --verde-h:#14311f;
-  --crema:#F6F1E9; --crema-d:#E9E2D4;
+  --verde:#1A3D2B;--verde-m:#2D6A4F;--verde-h:#14311f;
+  --crema:#F6F1E9;--crema-d:#E9E2D4;
   --terracota:#C4622D;
-  --gris:#6B7280; --gris-c:#D1D5DB;
-  --blanco:#FFFFFF;
-  --sombra:rgba(26,61,43,0.1);
-  --r:12px;
+  --gris:#6B7280;--gris-c:#D1D5DB;
+  --blanco:#fff;--r:12px;
+  --sombra:rgba(26,61,43,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--crema);color:#1a1a1a;min-height:100vh}
@@ -22,73 +21,101 @@ body{font-family:'DM Sans',sans-serif;background:var(--crema);color:#1a1a1a;min-
 #main-nav{background:var(--verde);padding:0 2rem;display:none;align-items:center;justify-content:space-between;height:62px;position:sticky;top:0;z-index:100;box-shadow:0 2px 14px rgba(0,0,0,.18)}
 .nav-logo{font-family:'Playfair Display',serif;color:var(--crema);font-size:1.4rem;cursor:pointer}
 .nav-logo span{color:#8FD5A6}
-.nav-actions{display:flex;align-items:center;gap:.75rem}
-.role-badge{font-size:.72rem;padding:4px 12px;border-radius:20px;font-weight:600;letter-spacing:.04em}
+.nav-right{display:flex;align-items:center;gap:.75rem}
+.nav-user{font-size:.78rem;color:rgba(255,255,255,.7)}
+.nav-finca{font-size:.72rem;color:#8FD5A6;font-weight:500}
+.role-badge{font-size:.7rem;padding:3px 10px;border-radius:20px;font-weight:600}
 .role-admin{background:#8FD5A6;color:#0D2419}
 .role-lector{background:#F5C842;color:#4A2E00}
-.btn-logout{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.8);padding:6px 14px;border-radius:6px;font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-logout{background:none;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.75);padding:6px 14px;border-radius:6px;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
 .btn-logout:hover{background:rgba(255,255,255,.1);color:#fff}
 
 /* VIEWS */
 .view{display:none}.view.active{display:block}
-#view-login.active{display:flex}
+#view-setup.active,#view-auth.active{display:flex}
 
-/* LOGIN */
-#view-login{align-items:center;justify-content:center;min-height:100vh;background:var(--verde);position:relative;overflow:hidden}
-#view-login::before{content:'';position:absolute;top:-40%;right:-15%;width:550px;height:550px;border-radius:50%;background:rgba(45,106,79,.22);pointer-events:none}
-#view-login::after{content:'';position:absolute;bottom:-25%;left:-10%;width:400px;height:400px;border-radius:50%;background:rgba(20,80,50,.18);pointer-events:none}
-.login-card{background:#fff;border-radius:24px;padding:2.75rem 2.5rem;width:460px;max-width:93vw;position:relative;z-index:10;box-shadow:0 24px 60px rgba(0,0,0,.22)}
-.login-logo{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde);margin-bottom:.3rem}
-.login-logo span{color:var(--terracota)}
-.login-sub{color:var(--gris);font-size:.87rem;margin-bottom:1.75rem;line-height:1.55}
-.login-opts{display:flex;flex-direction:column;gap:1rem}
-.login-opt{border-radius:var(--r);border:2px solid;padding:1.2rem 1.5rem;cursor:pointer;transition:all .22s;text-align:left;width:100%;font-family:'DM Sans',sans-serif}
-.login-opt.admin{border-color:var(--verde);background:var(--verde);color:#fff}
-.login-opt.admin:hover{background:var(--verde-h)}
-.login-opt.lector{border-color:var(--gris-c);background:#fff;color:#333}
-.login-opt.lector:hover{border-color:var(--verde-m);background:var(--crema)}
-.opt-title{font-weight:600;font-size:.95rem;margin-bottom:3px}
-.opt-desc{font-size:.78rem;opacity:.75}
-.pw-modal{display:none;background:var(--crema);border-radius:10px;padding:1.1rem;margin-top:.5rem}
-.pw-modal.show{display:block}
-.err-msg{color:#DC2626;font-size:.78rem;margin:.25rem 0 .5rem;display:none}
-.err-msg.show{display:block}
+/* LOADING */
+#loading{display:none;position:fixed;inset:0;background:rgba(26,61,43,.55);z-index:9999;align-items:center;justify-content:center}
+#loading.show{display:flex}
+.spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-box{background:#fff;border-radius:16px;padding:2rem 2.5rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.85rem}
+.loading-msg{font-size:.9rem;color:var(--gris)}
+
+/* SETUP SCREEN */
+#view-setup{align-items:center;justify-content:center;min-height:100vh;background:var(--verde);padding:1.5rem}
+.setup-card{background:#fff;border-radius:20px;padding:2.5rem;max-width:540px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+.setup-logo{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--verde);margin-bottom:.25rem}
+.setup-logo span{color:var(--terracota)}
+.setup-subtitle{color:var(--gris);font-size:.88rem;margin-bottom:1.75rem;line-height:1.55}
+.setup-steps{counter-reset:step;display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.75rem}
+.setup-step{display:flex;gap:.75rem;align-items:flex-start;font-size:.86rem;color:#333;line-height:1.5}
+.setup-step::before{counter-increment:step;content:counter(step);min-width:24px;height:24px;background:var(--verde);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:600;flex-shrink:0;margin-top:.05rem}
+.setup-step strong{color:var(--verde)}
+.setup-step code{background:var(--crema);padding:1px 6px;border-radius:4px;font-size:.8rem;color:var(--terracota)}
+
+/* AUTH SCREEN (Login/Register) */
+#view-auth{align-items:center;justify-content:center;min-height:100vh;background:var(--verde);position:relative;overflow:hidden;padding:1.5rem}
+#view-auth::before{content:'';position:absolute;top:-40%;right:-15%;width:500px;height:500px;border-radius:50%;background:rgba(45,106,79,.22);pointer-events:none}
+#view-auth::after{content:'';position:absolute;bottom:-25%;left:-10%;width:380px;height:380px;border-radius:50%;background:rgba(20,80,50,.18);pointer-events:none}
+.auth-card{background:#fff;border-radius:24px;padding:2.5rem;width:460px;max-width:100%;position:relative;z-index:10;box-shadow:0 24px 60px rgba(0,0,0,.22)}
+.auth-logo{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--verde);margin-bottom:.25rem}
+.auth-logo span{color:var(--terracota)}
+.auth-sub{color:var(--gris);font-size:.86rem;margin-bottom:1.75rem;line-height:1.5}
+.auth-tabs{display:flex;gap:0;border-bottom:2px solid var(--crema-d);margin-bottom:1.5rem}
+.auth-tab{flex:1;text-align:center;padding:.75rem;font-size:.9rem;font-weight:500;color:var(--gris);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .18s}
+.auth-tab.active{color:var(--verde);border-bottom-color:var(--verde)}
+.auth-panel{display:none}.auth-panel.active{display:block}
+.finca-toggle{display:flex;gap:.6rem;margin-bottom:1rem}
+.finca-opt{flex:1;border:1.5px solid var(--gris-c);border-radius:8px;padding:.7rem;text-align:center;cursor:pointer;transition:all .2s;font-size:.82rem;color:var(--gris)}
+.finca-opt.active{border-color:var(--verde);background:var(--crema);color:var(--verde);font-weight:600}
+.finca-sub{display:none}.finca-sub.show{display:block}
+.auth-footer{text-align:center;margin-top:1.2rem;font-size:.82rem;color:var(--gris)}
+.auth-footer a{color:var(--verde);cursor:pointer;font-weight:500;text-decoration:underline}
 
 /* INPUTS & BUTTONS */
 .inp{width:100%;padding:10px 14px;border:1.5px solid var(--gris-c);border-radius:8px;font-size:.9rem;font-family:'DM Sans',sans-serif;transition:border-color .2s;background:#fff;color:#1a1a1a}
 .inp:focus{outline:none;border-color:var(--verde)}
 select.inp{cursor:pointer}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid transparent}
+.inp-err{border-color:#DC2626!important}
+.err-msg{color:#DC2626;font-size:.78rem;margin-top:.3rem;display:none}
+.err-msg.show{display:block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid transparent;width:100%}
 .btn-p{background:var(--verde);color:#fff;border-color:var(--verde)}
 .btn-p:hover{background:var(--verde-h)}
-.btn-s{background:transparent;color:var(--verde);border-color:var(--verde)}
+.btn-s{background:transparent;color:var(--verde);border-color:var(--verde);width:auto}
 .btn-s:hover{background:var(--crema-d)}
-.btn-d{background:#DC2626;color:#fff;border-color:#DC2626}
+.btn-d{background:#DC2626;color:#fff;border-color:#DC2626;width:auto}
 .btn-d:hover{background:#B91C1C}
-.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.35)}
+.btn-ghost{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.35);width:auto}
 .btn-ghost:hover{background:rgba(255,255,255,.2)}
-.btn-sm{padding:6px 12px;font-size:.78rem;border-radius:6px}
-.btn-xs{padding:4px 9px;font-size:.72rem;border-radius:5px}
+.btn-sm{padding:6px 14px;font-size:.78rem;border-radius:6px;width:auto}
+.btn-xs{padding:4px 9px;font-size:.72rem;border-radius:5px;width:auto}
+.form-grp{margin-bottom:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-lbl{display:block;font-size:.83rem;font-weight:500;color:#333;margin-bottom:.4rem}
+.form-hint{font-size:.74rem;color:var(--gris);margin-top:.3rem}
+.form-sec{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gris);margin:1.5rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--crema-d)}
+.form-acts{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap}
+.divider{border:none;border-top:1px solid var(--crema-d);margin:1rem 0}
 
-/* LAYOUT */
+/* CONTAINER */
 .container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
-.back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--gris);cursor:pointer;font-size:.88rem;margin-bottom:1.5rem;transition:color .2s;background:none;border:none;font-family:'DM Sans',sans-serif;padding:0}
+.back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--gris);cursor:pointer;font-size:.88rem;margin-bottom:1.5rem;background:none;border:none;font-family:'DM Sans',sans-serif;padding:0;transition:color .2s}
 .back-btn:hover{color:var(--verde)}
 
 /* DASHBOARD */
 .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem}
 .dash-title{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde)}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.75rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.75rem}
 .stat-card{background:var(--blanco);border-radius:var(--r);padding:1.2rem 1.5rem;border:1px solid var(--crema-d)}
 .stat-label{font-size:.7rem;color:var(--gris);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem}
 .stat-value{font-family:'Playfair Display',serif;font-size:2rem;color:var(--verde);line-height:1}
-
-/* CATTLE GRID */
 .cattle-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:1.2rem}
 .cc{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:pointer}
 .cc:hover{transform:translateY(-3px);box-shadow:0 8px 28px var(--sombra)}
 .cc-head{background:var(--verde);padding:1.2rem 1.5rem;position:relative}
-.cc-id{font-size:.65rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
+.cc-id{font-size:.62rem;color:rgba(255,255,255,.42);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px}
 .cc-name{font-family:'Playfair Display',serif;color:#fff;font-size:1.35rem}
 .cc-sub{font-size:.78rem;color:rgba(255,255,255,.6);margin-top:2px}
 .cc-icon{position:absolute;right:1.2rem;top:50%;transform:translateY(-50%);width:38px;height:38px;background:rgba(255,255,255,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
@@ -99,6 +126,8 @@ select.inp{cursor:pointer}
 .ccs-l{font-size:.65rem;color:var(--gris);margin-top:1px}
 .cc-estado{margin-bottom:.75rem}
 .cc-actions{display:flex;gap:.5rem;border-top:1px solid var(--crema-d);padding-top:.85rem;flex-wrap:wrap}
+.empty{text-align:center;padding:3rem 2rem;color:var(--gris);grid-column:1/-1}
+.empty-sec{text-align:center;padding:1.75rem;color:var(--gris);font-size:.88rem}
 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;padding:3px 9px;border-radius:20px;font-weight:600}
@@ -110,27 +139,18 @@ select.inp{cursor:pointer}
 .b-vacuna{background:#DBEAFE;color:#1E40AF}
 .b-enf-activa{background:#FEE2E2;color:#991B1B}
 .b-enf-ok{background:#D1FAE5;color:#065F46}
-
-/* EMPTY */
-.empty{text-align:center;padding:3.5rem 2rem;color:var(--gris);grid-column:1/-1}
-.empty-sec{text-align:center;padding:1.75rem;color:var(--gris);font-size:.88rem}
+.b-sync{background:#FEF3C7;color:#92400E;font-size:.65rem}
 
 /* FORM */
 .form-card{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);padding:2rem;max-width:700px}
 .form-title{font-family:'Playfair Display',serif;font-size:1.75rem;color:var(--verde);margin-bottom:1.5rem}
-.form-sec{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--gris);margin:1.5rem 0 .8rem;padding-bottom:.4rem;border-bottom:1px solid var(--crema-d)}
-.form-grp{margin-bottom:1rem}
-.form-lbl{display:block;font-size:.83rem;font-weight:500;color:#333;margin-bottom:.4rem}
-.form-hint{font-size:.74rem;color:var(--gris);margin-top:.3rem}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
-.form-acts{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap}
 
 /* PERFIL */
 .perf-card{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);overflow:hidden;margin-bottom:1.5rem}
 .perf-head{background:var(--verde);padding:2rem}
 .perf-nombre{font-family:'Playfair Display',serif;font-size:2.2rem;margin-bottom:.15rem;color:#fff}
-.perf-id{font-size:.75rem;opacity:.5;letter-spacing:.08em;color:#fff}
+.perf-id{font-size:.72rem;opacity:.45;letter-spacing:.08em;color:#fff}
 .perf-sub{font-size:.9rem;opacity:.65;margin-top:3px;color:#fff}
 .perf-top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 .perf-btns{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem}
@@ -140,16 +160,11 @@ select.inp{cursor:pointer}
 .cs-u{font-size:.73rem;color:var(--gris)}
 .cs-l{font-size:.62rem;text-transform:uppercase;letter-spacing:.07em;color:var(--gris);margin-top:4px}
 .cs-big{grid-column:span 2}
-
-/* TABS */
 .tabs-bar{display:flex;border-bottom:2px solid var(--crema-d);padding:0 1.5rem;overflow-x:auto}
 .tab{padding:.85rem 1.1rem;font-size:.84rem;font-weight:500;color:var(--gris);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .18s}
 .tab.active{color:var(--verde);border-bottom-color:var(--verde)}
 .tab:hover{color:var(--verde)}
-.tab-panel{display:none;padding:1.5rem}
-.tab-panel.active{display:block}
-
-/* TABLES */
+.tab-panel{display:none;padding:1.5rem}.tab-panel.active{display:block}
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.08em;color:var(--gris);padding:.5rem .75rem;border-bottom:1px solid var(--crema-d)}
 .tbl td{padding:.72rem .75rem;border-bottom:1px solid var(--crema-d);font-size:.87rem;vertical-align:middle}
@@ -158,13 +173,9 @@ select.inp{cursor:pointer}
 .t-up{background:#DCFCE7;color:#15803D}
 .t-dn{background:#FEE2E2;color:#B91C1C}
 .t-eq{background:#F3F4F6;color:#6B7280}
-
-/* CHARTS */
 .charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:1rem;margin-bottom:1.5rem}
 .mini-chart{background:var(--crema);border-radius:10px;padding:.9rem}
 .mc-title{font-size:.68rem;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem}
-
-/* LIST ITEMS */
 .list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem}
 .sect-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--verde)}
 .list-item{display:flex;align-items:center;justify-content:space-between;padding:.85rem .75rem;border-bottom:1px solid var(--crema-d);gap:.75rem;flex-wrap:wrap}
@@ -176,7 +187,7 @@ select.inp{cursor:pointer}
 
 /* CHAPETA */
 .chapeta-wrap{background:var(--blanco);border-radius:var(--r);border:1px solid var(--crema-d);padding:2rem;text-align:center}
-.chapeta-tag{width:175px;height:196px;background:#FFD700;border-radius:50% 50% 48% 48% / 60% 60% 40% 40%;margin:0 auto 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;border:3px solid #E5B800;position:relative}
+.chapeta-tag{width:175px;height:196px;background:#FFD700;border-radius:50% 50% 48% 48%/60% 60% 40% 40%;margin:0 auto 1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;border:3px solid #E5B800;position:relative}
 .chapeta-tag::before{content:'';position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:15px;height:15px;background:#CC9900;border-radius:50%;box-shadow:0 0 0 3px #E5B800}
 .tag-name{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#4A2E00;text-align:center;max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
 .tag-id{font-size:.58rem;color:#7A5000;letter-spacing:.06em;margin-bottom:6px}
@@ -191,56 +202,158 @@ select.inp{cursor:pointer}
 .modal-sub{color:var(--gris);font-size:.86rem;margin-bottom:1.4rem;line-height:1.5}
 .modal-acts{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.4rem}
 
-@media print{
-  #main-nav,.back-btn,.chapeta-acts,.perf-btns,.tabs-bar,.cur-stats,.perf-btns,#admin-head-btn{display:none!important}
-  body{background:#fff}
-  .chapeta-tag{width:240px;height:268px}
-}
-@media(max-width:620px){
-  .form-row,.form-row-3{grid-template-columns:1fr}
-  .perf-nombre{font-size:1.7rem}
-  .cur-stats{grid-template-columns:repeat(2,1fr)}
-}
+/* SYNC indicator */
+.sync-bar{background:var(--crema-d);border-radius:8px;padding:.6rem 1rem;font-size:.78rem;color:var(--gris);display:flex;align-items:center;gap:.5rem;margin-bottom:1.5rem}
+.sync-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sync-ok{background:#22C55E}.sync-err{background:#EF4444}.sync-loading{background:#F59E0B;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+@media print{#main-nav,.back-btn,.chapeta-acts,.perf-btns,.tabs-bar,.cur-stats,#admin-head-btn{display:none!important}body{background:#fff}.chapeta-tag{width:240px;height:268px}}
+@media(max-width:620px){.form-row,.form-row-3{grid-template-columns:1fr}.perf-nombre{font-size:1.7rem}.cur-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 
-<!-- ========== LOGIN ========== -->
-<div id="view-login" class="view active">
-  <div class="login-card">
-    <div class="login-logo">Ganade<span>App</span></div>
-    <p class="login-sub">Sistema de Gestión Ganadera con Chapetas QR<br>Registra, rastrea y etiqueta tu ganado fácilmente.</p>
-    <div class="login-opts">
-      <button class="login-opt admin" onclick="togglePW()">
-        <div class="opt-title">🔐 Administrador / Editor</div>
-        <div class="opt-desc">Crear, editar y gestionar toda la información del ganado</div>
-      </button>
-      <div class="pw-modal" id="pw-modal">
-        <input type="password" id="pw-inp" class="inp" placeholder="Contraseña de administrador" onkeydown="if(event.key==='Enter')doLogin()">
-        <div class="err-msg" id="pw-err">Contraseña incorrecta. Intenta de nuevo.</div>
-        <button class="btn btn-p btn-sm" onclick="doLogin()" style="margin-top:.4rem">Ingresar →</button>
-        <p style="font-size:.72rem;color:var(--gris);margin-top:.5rem">Contraseña de prueba: <strong>ganadero123</strong></p>
-      </div>
-      <button class="login-opt lector" onclick="setRole('lector')">
-        <div class="opt-title">👁 Lector / Visitante</div>
-        <div class="opt-desc">Solo consultar datos del ganado (sin edición)</div>
-      </button>
-    </div>
+<!-- ████ LOADING ████ -->
+<div id="loading">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-msg" id="loading-msg">Cargando…</div>
   </div>
 </div>
 
-<!-- ========== NAV ========== -->
+<!-- ████ SETUP ████ -->
+<div id="view-setup" class="view active">
+  <div class="setup-card">
+    <div class="setup-logo">Ganade<span>App</span></div>
+    <p class="setup-subtitle">Conecta la app a tu Google Sheet para sincronizar datos entre dispositivos. Solo necesitas hacer esto una vez.</p>
+    <div class="setup-steps">
+      <div class="setup-step">Ve a <a href="https://sheets.google.com" target="_blank"><strong>sheets.google.com</strong></a> y crea una nueva hoja de cálculo vacía.</div>
+      <div class="setup-step">En el menú, haz clic en <strong>Extensiones</strong> → <strong>Apps Script</strong>.</div>
+      <div class="setup-step">Borra el código que aparece y pega el contenido del archivo <code>GanaderApp_Backend.js</code> que descargaste.</div>
+      <div class="setup-step">Haz clic en <strong>Implementar</strong> → <strong>Nueva implementación</strong> → elige tipo <strong>Aplicación web</strong>.</div>
+      <div class="setup-step">En <em>"Ejecutar como"</em> pon <strong>Yo</strong>. En <em>"Quién tiene acceso"</em> pon <strong>Cualquier persona</strong>. Dale a <strong>Implementar</strong> y autoriza.</div>
+      <div class="setup-step">Copia la <strong>URL de la implementación</strong> y pégala aquí abajo:</div>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">URL de tu Apps Script Web App</label>
+      <input type="url" class="inp" id="setup-url" placeholder="https://script.google.com/macros/s/…/exec">
+      <p class="err-msg" id="setup-err"></p>
+    </div>
+    <button class="btn btn-p" onclick="guardarSetup()">✔ Guardar y continuar</button>
+    <p style="font-size:.75rem;color:var(--gris);margin-top:.9rem;line-height:1.5">
+      ⚠️ La URL se guarda solo en este dispositivo. Necesitarás pegarla también en los otros dispositivos que uses.
+    </p>
+  </div>
+</div>
+
+<!-- ████ AUTH (Login / Register) ████ -->
+<div id="view-auth" class="view">
+  <div class="auth-card">
+    <div class="auth-logo">Ganade<span>App</span></div>
+    <p class="auth-sub">Gestión ganadera con chapetas QR</p>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuth(0)">Iniciar sesión</div>
+      <div class="auth-tab" onclick="switchAuth(1)">Registrarse</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-panel active" id="auth-login">
+      <div class="form-grp">
+        <label class="form-lbl">Correo electrónico</label>
+        <input type="email" class="inp" id="l-email" placeholder="correo@ejemplo.com" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">Contraseña</label>
+        <input type="password" class="inp" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <p class="err-msg" id="l-err"></p>
+      <button class="btn btn-p" onclick="doLogin()" style="margin-top:.5rem">Iniciar sesión →</button>
+      <div class="auth-footer">¿No tienes cuenta? <a onclick="switchAuth(1)">Regístrate aquí</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-panel" id="auth-register">
+      <div class="form-row">
+        <div class="form-grp">
+          <label class="form-lbl">Tu nombre *</label>
+          <input type="text" class="inp" id="r-nombre" placeholder="Ej: Carlos López">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Correo electrónico *</label>
+          <input type="email" class="inp" id="r-email" placeholder="correo@ejemplo.com">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grp">
+          <label class="form-lbl">Contraseña * <span style="font-weight:400;color:var(--gris)">(mín. 6 caracteres)</span></label>
+          <input type="password" class="inp" id="r-pass" placeholder="••••••••">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl">Confirmar contraseña *</label>
+          <input type="password" class="inp" id="r-pass2" placeholder="••••••••">
+        </div>
+      </div>
+
+      <hr class="divider">
+      <p style="font-size:.83rem;font-weight:500;margin-bottom:.6rem">¿Qué quieres hacer con tu finca?</p>
+      <div class="finca-toggle">
+        <div class="finca-opt active" id="opt-crear" onclick="toggleFinca('crear')">🏡 Crear nueva finca</div>
+        <div class="finca-opt" id="opt-unir" onclick="toggleFinca('unir')">🔗 Unirme a una finca</div>
+      </div>
+
+      <!-- CREAR FINCA -->
+      <div class="finca-sub show" id="sub-crear">
+        <div class="form-grp">
+          <label class="form-lbl">Nombre de tu finca *</label>
+          <input type="text" class="inp" id="r-finca-nombre" placeholder="Ej: Finca El Paraíso">
+          <p class="form-hint">Serás el administrador. Comparte el código con tu equipo para que se unan.</p>
+        </div>
+      </div>
+
+      <!-- UNIRSE A FINCA -->
+      <div class="finca-sub" id="sub-unir">
+        <div class="form-grp">
+          <label class="form-lbl">Código de la finca *</label>
+          <input type="text" class="inp" id="r-finca-codigo" placeholder="Ej: FINCA-A1B2C3" style="text-transform:uppercase">
+          <p class="form-hint">Pídele el código al administrador de la finca. Entrarás como lector.</p>
+        </div>
+      </div>
+
+      <p class="err-msg" id="r-err"></p>
+      <button class="btn btn-p" onclick="doRegister()" style="margin-top:.5rem">Crear cuenta →</button>
+      <div class="auth-footer">¿Ya tienes cuenta? <a onclick="switchAuth(0)">Inicia sesión</a></div>
+    </div>
+
+    <hr class="divider" style="margin-top:1.2rem">
+    <p style="font-size:.72rem;color:var(--gris);text-align:center">
+      ¿Cambiaste de Google Sheet? <a style="color:var(--verde);cursor:pointer" onclick="resetSetup()">Cambiar URL de conexión</a>
+    </p>
+  </div>
+</div>
+
+<!-- ████ NAV ████ -->
 <nav id="main-nav">
   <div class="nav-logo" onclick="showDash()">Ganade<span>App</span></div>
-  <div class="nav-actions">
+  <div class="nav-right">
+    <div>
+      <div class="nav-user" id="nav-user"></div>
+      <div class="nav-finca" id="nav-finca"></div>
+    </div>
     <span class="role-badge" id="role-badge"></span>
-    <button class="btn-logout" onclick="logout()">Salir</button>
+    <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
   </div>
 </nav>
 
-<!-- ========== DASHBOARD ========== -->
+<!-- ████ DASHBOARD ████ -->
 <div id="view-dash" class="view">
   <div class="container">
+    <div id="sync-bar" class="sync-bar" style="display:none">
+      <div class="sync-dot sync-ok" id="sync-dot"></div>
+      <span id="sync-msg">Sincronizado con Google Sheets</span>
+      <button class="btn btn-s btn-xs" style="margin-left:auto" onclick="cargarVacas()">↻ Actualizar</button>
+    </div>
     <div class="dash-header">
       <h1 class="dash-title">Mi Ganado</h1>
       <div id="admin-head-btn"></div>
@@ -250,49 +363,28 @@ select.inp{cursor:pointer}
   </div>
 </div>
 
-<!-- ========== FORM NUEVA/EDITAR ========== -->
+<!-- ████ FORM NUEVA/EDITAR ████ -->
 <div id="view-form" class="view">
   <div class="container">
     <button class="back-btn" onclick="showDash()">← Volver al listado</button>
     <div class="form-card">
       <h2 class="form-title" id="form-title">Nueva Vaca</h2>
       <input type="hidden" id="f-id">
-
       <div class="form-sec">Identificación</div>
       <div class="form-row">
-        <div class="form-grp">
-          <label class="form-lbl">Nombre *</label>
-          <input type="text" class="inp" id="f-nombre" placeholder="Ej: Lucera, Princesa…">
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">Raza</label>
-          <input type="text" class="inp" id="f-raza" placeholder="Ej: Holstein, Brahman…">
-        </div>
+        <div class="form-grp"><label class="form-lbl">Nombre *</label><input type="text" class="inp" id="f-nombre" placeholder="Ej: Lucera…"></div>
+        <div class="form-grp"><label class="form-lbl">Raza</label><input type="text" class="inp" id="f-raza" placeholder="Ej: Holstein, Brahman…"></div>
       </div>
       <div class="form-row">
-        <div class="form-grp">
-          <label class="form-lbl">Edad (años)</label>
-          <input type="number" class="inp" id="f-edad" min="0" max="30" step="0.5" placeholder="Ej: 3">
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">Embarazos / Partos que ha tenido</label>
-          <input type="number" class="inp" id="f-embarazos" min="0" step="1" placeholder="Ej: 2">
-        </div>
+        <div class="form-grp"><label class="form-lbl">Edad (años)</label><input type="number" class="inp" id="f-edad" min="0" max="30" step="0.5" placeholder="Ej: 3"></div>
+        <div class="form-grp"><label class="form-lbl">Embarazos / Partos</label><input type="number" class="inp" id="f-embarazos" min="0" step="1" placeholder="Ej: 2"></div>
       </div>
-
-      <div class="form-sec">Medidas y producción actuales</div>
+      <div class="form-sec">Medidas y producción</div>
       <div class="form-row">
-        <div class="form-grp">
-          <label class="form-lbl">Peso actual (kg)</label>
-          <input type="number" class="inp" id="f-peso" min="1" max="2000" placeholder="Ej: 450">
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">Litros de leche / día</label>
-          <input type="number" class="inp" id="f-leche" min="0" step="0.5" placeholder="Ej: 18">
-        </div>
+        <div class="form-grp"><label class="form-lbl">Peso actual (kg)</label><input type="number" class="inp" id="f-peso" min="1" max="2000" placeholder="Ej: 450"></div>
+        <div class="form-grp"><label class="form-lbl">Litros de leche / día</label><input type="number" class="inp" id="f-leche" min="0" step="0.5" placeholder="Ej: 18"></div>
       </div>
-      <div class="form-grp">
-        <label class="form-lbl">Estado fisiológico actual</label>
+      <div class="form-grp"><label class="form-lbl">Estado fisiológico actual</label>
         <select class="inp" id="f-estado">
           <option value="normal">Normal / Vacía</option>
           <option value="celo">En celo</option>
@@ -301,38 +393,27 @@ select.inp{cursor:pointer}
           <option value="seca">Seca / No lactando</option>
         </select>
       </div>
-
       <div class="form-sec">Sanidad</div>
-      <div class="form-grp">
-        <label class="form-lbl">Última desparasitación</label>
-        <input type="date" class="inp" id="f-desparasitacion">
+      <div class="form-grp"><label class="form-lbl">Última desparasitación</label><input type="date" class="inp" id="f-desparasitacion"></div>
+      <div class="form-grp"><label class="form-lbl">Vacunas aplicadas <span style="font-weight:400;color:var(--gris)">(separadas por coma)</span></label>
+        <input type="text" class="inp" id="f-vacunas" placeholder="Ej: Fiebre Aftosa, Brucelosis…">
+        <p class="form-hint">Podrás agregar más desde el perfil del animal.</p>
       </div>
-      <div class="form-grp">
-        <label class="form-lbl">Vacunas aplicadas (separadas por coma)</label>
-        <input type="text" class="inp" id="f-vacunas" placeholder="Ej: Fiebre Aftosa, Brucelosis, IBR…">
-        <p class="form-hint">Puedes gestionar vacunas individuales desde el perfil del animal.</p>
+      <div class="form-grp"><label class="form-lbl">Enfermedades <span style="font-weight:400;color:var(--gris)">(separadas por coma)</span></label>
+        <input type="text" class="inp" id="f-enfermedades" placeholder="Ej: Mastitis 2023, Neumonía…">
+        <p class="form-hint">Podrás gestionar enfermedades individualmente desde el perfil.</p>
       </div>
-      <div class="form-grp">
-        <label class="form-lbl">Enfermedades (separadas por coma)</label>
-        <input type="text" class="inp" id="f-enfermedades" placeholder="Ej: Mastitis 2023, Neumonía...">
-        <p class="form-hint">Puedes gestionar enfermedades individualmente desde el perfil del animal.</p>
-      </div>
-
       <div class="form-sec">Notas</div>
-      <div class="form-grp">
-        <label class="form-lbl">Notas adicionales (opcional)</label>
-        <input type="text" class="inp" id="f-notas" placeholder="Observaciones generales del animal…">
-      </div>
-
+      <div class="form-grp"><label class="form-lbl">Notas adicionales (opcional)</label><input type="text" class="inp" id="f-notas" placeholder="Observaciones generales…"></div>
       <div class="form-acts">
-        <button class="btn btn-p" onclick="saveVaca()">💾 Guardar</button>
+        <button class="btn btn-p" style="width:auto" onclick="saveVaca()">💾 Guardar</button>
         <button class="btn btn-s" onclick="showDash()">Cancelar</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ========== PERFIL ========== -->
+<!-- ████ PERFIL ████ -->
 <div id="view-perf" class="view">
   <div class="container">
     <button class="back-btn" onclick="showDash()">← Volver al listado</button>
@@ -354,64 +435,47 @@ select.inp{cursor:pointer}
         <div class="tab" onclick="switchTab(2)">🏥 Enfermedades</div>
         <div class="tab" onclick="switchTab(3)">🏷 Chapeta QR</div>
       </div>
-
-      <!-- TAB 0: HISTORIAL -->
+      <!-- TAB 0 -->
       <div class="tab-panel active" id="panel-0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:.75rem">
-          <h3 class="sect-title">Registros históricos</h3>
-          <div id="add-reg-btn"></div>
+          <h3 class="sect-title">Registros históricos</h3><div id="add-reg-btn"></div>
         </div>
         <div class="charts-grid" id="charts-grid"></div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th>Fecha</th><th>Edad</th><th>Peso</th><th>Leche/día</th><th>Estado fisiológico</th><th>Notas</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Edad</th><th>Peso</th><th>Leche/día</th><th>Estado</th><th>Notas</th></tr></thead>
             <tbody id="hist-tbody"></tbody>
           </table>
         </div>
-        <div id="no-hist" style="text-align:center;color:var(--gris);padding:1.75rem;display:none">
-          <div style="font-size:1.5rem;margin-bottom:.5rem">📋</div>Sin registros históricos aún
-        </div>
+        <div id="no-hist" style="text-align:center;color:var(--gris);padding:1.75rem;display:none"><div style="font-size:1.4rem;margin-bottom:.5rem">📋</div>Sin registros históricos aún</div>
       </div>
-
-      <!-- TAB 1: VACUNAS -->
+      <!-- TAB 1 -->
       <div class="tab-panel" id="panel-1">
-        <div class="list-header">
-          <h3 class="sect-title">Vacunas aplicadas</h3>
-          <div id="add-vac-btn"></div>
-        </div>
+        <div class="list-header"><h3 class="sect-title">Vacunas aplicadas</h3><div id="add-vac-btn"></div></div>
         <div id="vacunas-list"></div>
       </div>
-
-      <!-- TAB 2: ENFERMEDADES -->
+      <!-- TAB 2 -->
       <div class="tab-panel" id="panel-2">
-        <div class="list-header">
-          <h3 class="sect-title">Enfermedades</h3>
-          <div id="add-enf-btn"></div>
-        </div>
+        <div class="list-header"><h3 class="sect-title">Enfermedades</h3><div id="add-enf-btn"></div></div>
         <div id="enf-list"></div>
       </div>
-
-      <!-- TAB 3: CHAPETA -->
+      <!-- TAB 3 -->
       <div class="tab-panel" id="panel-3">
         <h3 class="sect-title" style="margin-bottom:1.2rem">Chapeta QR</h3>
         <div style="text-align:center">
-          <div class="chapeta-tag" id="tab-chapeta-tag">
-            <div class="tag-name" id="prev-name"></div>
-            <div class="tag-id" id="prev-tagid"></div>
-            <div id="prev-qr"></div>
-          </div>
+          <div class="chapeta-tag"><div class="tag-name" id="prev-name"></div><div class="tag-id" id="prev-tagid"></div><div id="prev-qr"></div></div>
           <div class="chapeta-acts">
-            <button class="btn btn-p" onclick="showChapeta()">🏷 Ver chapeta completa</button>
-            <button class="btn btn-s" onclick="copyQRUrl()">📋 Copiar URL</button>
+            <button class="btn btn-p btn-sm" onclick="showChapeta()">🏷 Ver chapeta completa</button>
+            <button class="btn btn-s btn-sm" onclick="copyQRUrl()">📋 Copiar URL</button>
           </div>
-          <p style="margin-top:1rem;font-size:.8rem;color:var(--gris)">Escanea con cualquier celular para ver el perfil de este animal.</p>
+          <p style="margin-top:1rem;font-size:.8rem;color:var(--gris)">Escanea con cualquier celular para ver el perfil del animal.</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ========== CHAPETA FULL ========== -->
+<!-- ████ CHAPETA FULL ████ -->
 <div id="view-chapeta" class="view">
   <div class="container">
     <button class="back-btn" onclick="showPerf(curId,3)">← Volver al perfil</button>
@@ -426,13 +490,10 @@ select.inp{cursor:pointer}
         </div>
         <div class="chapeta-info-box" id="a-info"></div>
         <div class="chapeta-acts" style="margin-top:1.4rem">
-          <button class="btn btn-p" onclick="window.print()">🖨 Imprimir chapeta</button>
-          <button class="btn btn-s" onclick="shareUrl()">📤 Compartir QR</button>
+          <button class="btn btn-p btn-sm" onclick="window.print()">🖨 Imprimir chapeta</button>
+          <button class="btn btn-s btn-sm" onclick="shareUrl()">📤 Compartir QR</button>
         </div>
       </div>
-      <p style="text-align:center;font-size:.8rem;color:var(--gris);margin-top:1.2rem;line-height:1.65">
-        Al escanear el QR con cualquier celular se mostrará<br>el perfil completo del animal con su historial.
-      </p>
     </div>
   </div>
 </div>
@@ -443,28 +504,15 @@ select.inp{cursor:pointer}
     <h3 class="modal-title">Nuevo Registro de Medidas</h3>
     <p class="modal-sub">Agrega una medición periódica para construir el historial del animal.</p>
     <div class="form-row">
-      <div class="form-grp">
-        <label class="form-lbl">Edad actual (años)</label>
-        <input type="number" class="inp" id="r-edad" min="0" step="0.5" placeholder="Ej: 3.5">
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">Fecha *</label>
-        <input type="date" class="inp" id="r-fecha">
-      </div>
+      <div class="form-grp"><label class="form-lbl">Edad (años)</label><input type="number" class="inp" id="rg-edad" min="0" step="0.5" placeholder="Ej: 3.5"></div>
+      <div class="form-grp"><label class="form-lbl">Fecha *</label><input type="date" class="inp" id="rg-fecha"></div>
     </div>
     <div class="form-row">
-      <div class="form-grp">
-        <label class="form-lbl">Peso (kg) *</label>
-        <input type="number" class="inp" id="r-peso" min="0" placeholder="Ej: 460">
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">Litros de leche / día</label>
-        <input type="number" class="inp" id="r-leche" min="0" step="0.5" placeholder="Ej: 20">
-      </div>
+      <div class="form-grp"><label class="form-lbl">Peso (kg) *</label><input type="number" class="inp" id="rg-peso" min="0" placeholder="Ej: 460"></div>
+      <div class="form-grp"><label class="form-lbl">Litros de leche / día</label><input type="number" class="inp" id="rg-leche" min="0" step="0.5" placeholder="Ej: 20"></div>
     </div>
-    <div class="form-grp">
-      <label class="form-lbl">Estado fisiológico</label>
-      <select class="inp" id="r-estado">
+    <div class="form-grp"><label class="form-lbl">Estado fisiológico</label>
+      <select class="inp" id="rg-estado">
         <option value="normal">Normal / Vacía</option>
         <option value="celo">En celo</option>
         <option value="embarazada">Embarazada</option>
@@ -472,13 +520,10 @@ select.inp{cursor:pointer}
         <option value="seca">Seca / No lactando</option>
       </select>
     </div>
-    <div class="form-grp">
-      <label class="form-lbl">Notas (opcional)</label>
-      <input type="text" class="inp" id="r-notas" placeholder="Observaciones de esta medición…">
-    </div>
+    <div class="form-grp"><label class="form-lbl">Notas (opcional)</label><input type="text" class="inp" id="rg-notas" placeholder="Observaciones…"></div>
     <div class="modal-acts">
-      <button class="btn btn-s" onclick="closeM('modal-reg')">Cancelar</button>
-      <button class="btn btn-p" onclick="saveReg()">💾 Guardar registro</button>
+      <button class="btn btn-s btn-sm" onclick="closeM('modal-reg')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="saveReg()">💾 Guardar registro</button>
     </div>
   </div>
 </div>
@@ -488,27 +533,15 @@ select.inp{cursor:pointer}
   <div class="modal">
     <h3 class="modal-title">Registrar Vacuna</h3>
     <p class="modal-sub">Agrega una vacuna al historial sanitario de este animal.</p>
-    <div class="form-grp">
-      <label class="form-lbl">Nombre de la vacuna *</label>
-      <input type="text" class="inp" id="v-nombre" placeholder="Ej: Fiebre Aftosa, Brucelosis, IBR, DVB…">
-    </div>
+    <div class="form-grp"><label class="form-lbl">Nombre de la vacuna *</label><input type="text" class="inp" id="v-nombre" placeholder="Ej: Fiebre Aftosa, Brucelosis…"></div>
     <div class="form-row">
-      <div class="form-grp">
-        <label class="form-lbl">Fecha de aplicación *</label>
-        <input type="date" class="inp" id="v-fecha">
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">Próxima dosis (opcional)</label>
-        <input type="date" class="inp" id="v-proxima">
-      </div>
+      <div class="form-grp"><label class="form-lbl">Fecha de aplicación *</label><input type="date" class="inp" id="v-fecha"></div>
+      <div class="form-grp"><label class="form-lbl">Próxima dosis (opcional)</label><input type="date" class="inp" id="v-proxima"></div>
     </div>
-    <div class="form-grp">
-      <label class="form-lbl">Lote / Laboratorio (opcional)</label>
-      <input type="text" class="inp" id="v-lote" placeholder="Ej: Vecol, Lote 2024-B…">
-    </div>
+    <div class="form-grp"><label class="form-lbl">Lote / Laboratorio (opcional)</label><input type="text" class="inp" id="v-lote" placeholder="Ej: Vecol, Lote 2024-B…"></div>
     <div class="modal-acts">
-      <button class="btn btn-s" onclick="closeM('modal-vac')">Cancelar</button>
-      <button class="btn btn-p" onclick="saveVacuna()">💾 Guardar</button>
+      <button class="btn btn-s btn-sm" onclick="closeM('modal-vac')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="saveVacuna()">💾 Guardar</button>
     </div>
   </div>
 </div>
@@ -517,31 +550,21 @@ select.inp{cursor:pointer}
 <div class="overlay" id="modal-enf">
   <div class="modal">
     <h3 class="modal-title">Registrar Enfermedad</h3>
-    <p class="modal-sub">Agrega un diagnóstico o condición de salud al historial del animal.</p>
-    <div class="form-grp">
-      <label class="form-lbl">Diagnóstico / Enfermedad *</label>
-      <input type="text" class="inp" id="e-nombre" placeholder="Ej: Mastitis, Neumonía, Retención de placenta…">
-    </div>
+    <p class="modal-sub">Agrega un diagnóstico al historial de salud del animal.</p>
+    <div class="form-grp"><label class="form-lbl">Diagnóstico / Enfermedad *</label><input type="text" class="inp" id="e-nombre" placeholder="Ej: Mastitis, Neumonía…"></div>
     <div class="form-row">
-      <div class="form-grp">
-        <label class="form-lbl">Fecha de diagnóstico *</label>
-        <input type="date" class="inp" id="e-fecha">
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">Estado</label>
+      <div class="form-grp"><label class="form-lbl">Fecha *</label><input type="date" class="inp" id="e-fecha"></div>
+      <div class="form-grp"><label class="form-lbl">Estado</label>
         <select class="inp" id="e-estado">
           <option value="activa">Activa / En tratamiento</option>
           <option value="resuelta">Resuelta / Curada</option>
         </select>
       </div>
     </div>
-    <div class="form-grp">
-      <label class="form-lbl">Tratamiento aplicado (opcional)</label>
-      <input type="text" class="inp" id="e-trat" placeholder="Ej: Penicilina 5 días, reposo 2 semanas…">
-    </div>
+    <div class="form-grp"><label class="form-lbl">Tratamiento (opcional)</label><input type="text" class="inp" id="e-trat" placeholder="Ej: Penicilina 5 días…"></div>
     <div class="modal-acts">
-      <button class="btn btn-s" onclick="closeM('modal-enf')">Cancelar</button>
-      <button class="btn btn-p" onclick="saveEnf()">💾 Guardar</button>
+      <button class="btn btn-s btn-sm" onclick="closeM('modal-enf')">Cancelar</button>
+      <button class="btn btn-p btn-sm" onclick="saveEnf()">💾 Guardar</button>
     </div>
   </div>
 </div>
@@ -550,183 +573,259 @@ select.inp{cursor:pointer}
 <div class="overlay" id="modal-del">
   <div class="modal">
     <h3 class="modal-title">¿Eliminar este animal?</h3>
-    <p class="modal-sub">Se eliminarán permanentemente todos los datos, historial, vacunas y enfermedades de este animal. Esta acción <strong>no se puede deshacer</strong>.</p>
+    <p class="modal-sub">Se eliminarán permanentemente todos sus datos e historial. Esta acción <strong>no se puede deshacer</strong>.</p>
     <div class="modal-acts">
-      <button class="btn btn-s" onclick="closeM('modal-del')">Cancelar</button>
-      <button class="btn btn-d" onclick="confirmDel()">Sí, eliminar</button>
+      <button class="btn btn-s btn-sm" onclick="closeM('modal-del')">Cancelar</button>
+      <button class="btn btn-d btn-sm" onclick="confirmDel()">Sí, eliminar</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-// ─────────────────────────────────────────
-//  ESTADO GLOBAL
-// ─────────────────────────────────────────
-let role = null, curId = null, delId = null, activeTab = 0;
-const PASS = 'ganadero123';
+// ═══════════════════════════════════════════════════════
+//  CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════
+let API_URL  = localStorage.getItem('gapp_api_url') || '';
+let session  = null;   // { id, nombre, email, rol, finca_id, finca_nombre }
+let vacasCache = [];   // cache local
+let curId    = null;
+let delId    = null;
+let activeTab= 0;
+let fincaMode= 'crear';
 
 const ESTADOS = {
-  normal:    { label:'Normal / Vacía', cls:'b-normal',    icon:'🟢' },
-  celo:      { label:'En celo',        cls:'b-celo',      icon:'🟡' },
-  embarazada:{ label:'Embarazada',     cls:'b-embarazada',icon:'🩷' },
-  postparto: { label:'Post-parto',     cls:'b-postparto', icon:'🔵' },
-  seca:      { label:'Seca',           cls:'b-seca',      icon:'⚪' },
+  normal:    {label:'Normal / Vacía', cls:'b-normal',    icon:'🟢'},
+  celo:      {label:'En celo',        cls:'b-celo',      icon:'🟡'},
+  embarazada:{label:'Embarazada',     cls:'b-embarazada',icon:'🩷'},
+  postparto: {label:'Post-parto',     cls:'b-postparto', icon:'🔵'},
+  seca:      {label:'Seca',           cls:'b-seca',      icon:'⚪'},
 };
 
-// ─────────────────────────────────────────
-//  HELPERS DATA
-// ─────────────────────────────────────────
-const get  = ()    => { try { return JSON.parse(localStorage.getItem('gapp3')||'[]'); } catch{ return []; }};
-const save = data  => localStorage.setItem('gapp3', JSON.stringify(data));
-const uid  = ()    => 'VAC-' + Date.now().toString(36).toUpperCase().slice(-6);
-const last = v     => v.registros && v.registros.length ? v.registros[v.registros.length-1] : null;
-const today= ()    => new Date().toISOString().split('T')[0];
-const badge= (cur,prev,u) => {
-  const d = cur - prev;
-  if(d>0) return `<span class="trend t-up">▲ +${d} ${u}</span>`;
-  if(d<0) return `<span class="trend t-dn">▼ ${d} ${u}</span>`;
-  return `<span class="trend t-eq">= igual</span>`;
-};
-const fmtDate = s => {
-  if(!s) return '—';
-  return new Date(s+'T12:00:00').toLocaleDateString('es-CO',{year:'numeric',month:'short',day:'numeric'});
-};
-const estadoBadge = e => {
-  const s = ESTADOS[e] || ESTADOS.normal;
-  return `<span class="badge ${s.cls}">${s.icon} ${s.label}</span>`;
-};
-
-// ─────────────────────────────────────────
-//  DEMO DATA
-// ─────────────────────────────────────────
-function initDemo() {
-  if(get().length) return;
-  save([
-    {
-      id:'VAC-L001', nombre:'Lucera', raza:'Holstein', embarazos:3,
-      ultimaDesp:'2024-10-05', notas:'Animal de alta producción',
-      vacunas:[
-        {nombre:'Fiebre Aftosa', fecha:'2024-06-01', proxima:'2024-12-01', lote:'Vecol 2024-A'},
-        {nombre:'Brucelosis',    fecha:'2023-05-15', proxima:'',           lote:''},
-        {nombre:'IBR / DVB',    fecha:'2024-03-20', proxima:'2025-03-20', lote:'Lote B-44'},
-      ],
-      enfermedades:[
-        {nombre:'Mastitis', fecha:'2023-08-10', estado:'resuelta', trat:'Penicilina 5 días + sellado de pezones'},
-      ],
-      registros:[
-        {fecha:'2022-03-10', edad:1,   peso:280, leche:12, estado:'normal',    notas:'Registro inicial'},
-        {fecha:'2022-09-15', edad:1.5, peso:340, leche:16, estado:'embarazada',notas:'Segundo embarazo'},
-        {fecha:'2023-03-12', edad:2,   peso:400, leche:20, estado:'postparto', notas:'Parto normal, ternero macho'},
-        {fecha:'2023-09-20', edad:2.5, peso:425, leche:22, estado:'embarazada',notas:'Tercer embarazo confirmado'},
-        {fecha:'2024-04-08', edad:3,   peso:448, leche:24, estado:'postparto', notas:'Parto excelente, ternera hembra'},
-      ]
-    },
-    {
-      id:'VAC-P002', nombre:'Princesa', raza:'Brahman', embarazos:1,
-      ultimaDesp:'2024-08-20', notas:'',
-      vacunas:[
-        {nombre:'Fiebre Aftosa',      fecha:'2024-06-10', proxima:'2024-12-10', lote:''},
-        {nombre:'Carbón Sintomático', fecha:'2024-01-15', proxima:'',           lote:'Vecol'},
-      ],
-      enfermedades:[],
-      registros:[
-        {fecha:'2023-01-05', edad:0.5, peso:195, leche:0,  estado:'normal',    notas:'Registro inicial'},
-        {fecha:'2023-07-10', edad:1,   peso:260, leche:0,  estado:'celo',      notas:'Primer celo detectado'},
-        {fecha:'2024-01-15', edad:1.5, peso:320, leche:8,  estado:'postparto', notas:'Primer parto, ternero macho'},
-        {fecha:'2024-07-20', edad:2,   peso:355, leche:10, estado:'celo',      notas:'Lista para servicio'},
-      ]
-    },
-    {
-      id:'VAC-E003', nombre:'Estrella', raza:'Simmental', embarazos:5,
-      ultimaDesp:'2024-09-12', notas:'Vaca madrina del lote',
-      vacunas:[
-        {nombre:'Fiebre Aftosa', fecha:'2024-06-05', proxima:'2024-12-05', lote:'Lote A-22'},
-        {nombre:'Leptospirosis', fecha:'2024-02-10', proxima:'2025-02-10', lote:''},
-        {nombre:'IBR / DVB',    fecha:'2023-11-20', proxima:'2024-11-20', lote:''},
-      ],
-      enfermedades:[
-        {nombre:'Neumonía leve',       fecha:'2022-07-14', estado:'resuelta', trat:'Enrofloxacina 3 días'},
-        {nombre:'Retención de placenta',fecha:'2024-03-05', estado:'resuelta', trat:'Extracción manual + oxitocina'},
-      ],
-      registros:[
-        {fecha:'2021-06-01', edad:3, peso:420, leche:18, estado:'normal',    notas:'Registro inicial'},
-        {fecha:'2022-06-10', edad:4, peso:490, leche:22, estado:'embarazada',notas:'Quinto embarazo'},
-        {fecha:'2023-01-05', edad:5, peso:510, leche:25, estado:'postparto', notas:'Parto sin complicaciones'},
-        {fecha:'2023-09-15', edad:5, peso:528, leche:26, estado:'embarazada',notas:'Confirmado nuevo embarazo'},
-        {fecha:'2024-04-20', edad:6, peso:545, leche:28, estado:'postparto', notas:'Buen parto, ternero saludable'},
-      ]
-    }
-  ]);
-}
-
-// ─────────────────────────────────────────
-//  BOOT
-// ─────────────────────────────────────────
-window.addEventListener('load', () => {
-  initDemo();
-  if(location.hash.startsWith('#v/')) {
-    role='lector'; applyRole(); showPerf(location.hash.replace('#v/',''));
-  } else { showView('view-login'); }
-});
-window.addEventListener('hashchange', () => {
-  if(location.hash.startsWith('#v/') && role) showPerf(location.hash.replace('#v/',''));
-});
-
-// ─────────────────────────────────────────
-//  AUTH
-// ─────────────────────────────────────────
-function togglePW(){
-  const m=document.getElementById('pw-modal');
-  m.classList.toggle('show');
-  if(m.classList.contains('show')) setTimeout(()=>document.getElementById('pw-inp').focus(),50);
-}
-function doLogin(){
-  if(document.getElementById('pw-inp').value===PASS){
-    document.getElementById('pw-err').classList.remove('show');
-    setRole('admin');
-  } else {
-    document.getElementById('pw-err').classList.add('show');
-    document.getElementById('pw-inp').value='';
-    document.getElementById('pw-inp').focus();
+// ═══════════════════════════════════════════════════════
+//  API
+// ═══════════════════════════════════════════════════════
+async function api(body, msg = 'Procesando…') {
+  showLoading(msg);
+  try {
+    const res  = await fetch(API_URL, {
+      method:  'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body:    JSON.stringify(body)
+    });
+    const data = await res.json();
+    hideLoading();
+    return data;
+  } catch (err) {
+    hideLoading();
+    return { ok: false, error: 'Sin conexión. Verifica tu internet e intenta de nuevo.' };
   }
 }
-function setRole(r){ role=r; applyRole(); showDash(); }
-function applyRole(){
-  document.getElementById('main-nav').style.display='flex';
-  const b=document.getElementById('role-badge');
-  b.textContent = role==='admin'?'⚙ Administrador':'👁 Lector';
-  b.className='role-badge '+(role==='admin'?'role-admin':'role-lector');
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  // ¿Viene de un QR?
+  if (location.hash.startsWith('#v/')) {
+    const id = location.hash.replace('#v/', '');
+    const cached = vacasCache.find(v => v.id === id);
+    if (cached) { showPerf(id); return; }
+  }
+
+  // ¿Tiene API configurada?
+  if (!API_URL) { showView('view-setup'); return; }
+
+  // ¿Tiene sesión guardada?
+  const saved = localStorage.getItem('gapp_session');
+  if (saved) {
+    try {
+      session = JSON.parse(saved);
+      applySession();
+      cargarVacas().then(() => {
+        if (location.hash.startsWith('#v/')) {
+          showPerf(location.hash.replace('#v/', ''));
+        }
+      });
+      return;
+    } catch { /* sesión inválida */ }
+  }
+
+  showView('view-auth');
+});
+
+window.addEventListener('hashchange', () => {
+  if (location.hash.startsWith('#v/') && session) showPerf(location.hash.replace('#v/', ''));
+});
+
+// ═══════════════════════════════════════════════════════
+//  SETUP
+// ═══════════════════════════════════════════════════════
+function guardarSetup() {
+  const url = document.getElementById('setup-url').value.trim();
+  const err = document.getElementById('setup-err');
+  if (!url || !url.startsWith('https://script.google.com')) {
+    err.textContent = 'Ingresa una URL válida de Google Apps Script.';
+    err.classList.add('show'); return;
+  }
+  API_URL = url;
+  localStorage.setItem('gapp_api_url', url);
+  err.classList.remove('show');
+  showView('view-auth');
 }
-function logout(){
-  role=null; curId=null;
-  document.getElementById('pw-inp').value='';
-  document.getElementById('pw-modal').classList.remove('show');
-  document.getElementById('pw-err').classList.remove('show');
-  document.getElementById('main-nav').style.display='none';
-  location.hash=''; showView('view-login');
+function resetSetup() {
+  localStorage.removeItem('gapp_api_url');
+  API_URL = '';
+  showView('view-setup');
 }
 
-// ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+//  AUTH UI
+// ═══════════════════════════════════════════════════════
+function switchAuth(i) {
+  document.querySelectorAll('.auth-tab').forEach((t,j) => t.classList.toggle('active', j===i));
+  document.querySelectorAll('.auth-panel').forEach((p,j) => p.classList.toggle('active', j===i));
+}
+function toggleFinca(mode) {
+  fincaMode = mode;
+  document.getElementById('opt-crear').classList.toggle('active', mode==='crear');
+  document.getElementById('opt-unir').classList.toggle('active', mode==='unir');
+  document.getElementById('sub-crear').classList.toggle('show', mode==='crear');
+  document.getElementById('sub-unir').classList.toggle('show', mode==='unir');
+}
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideErr(id) { document.getElementById(id).classList.remove('show'); }
+
+// ═══════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════
+async function doLogin() {
+  hideErr('l-err');
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  if (!email || !pass) { showErr('l-err', 'Completa todos los campos.'); return; }
+
+  const res = await api({action:'login', email, password:pass}, 'Verificando credenciales…');
+  if (!res.ok) { showErr('l-err', res.error); return; }
+
+  session = res.user;
+  localStorage.setItem('gapp_session', JSON.stringify(session));
+  applySession();
+  await cargarVacas();
+}
+
+// ═══════════════════════════════════════════════════════
+//  REGISTER
+// ═══════════════════════════════════════════════════════
+async function doRegister() {
+  hideErr('r-err');
+  const nombre = document.getElementById('r-nombre').value.trim();
+  const email  = document.getElementById('r-email').value.trim();
+  const pass   = document.getElementById('r-pass').value;
+  const pass2  = document.getElementById('r-pass2').value;
+
+  if (!nombre || !email || !pass) { showErr('r-err', 'Completa todos los campos obligatorios.'); return; }
+  if (pass !== pass2)             { showErr('r-err', 'Las contraseñas no coinciden.'); return; }
+  if (pass.length < 6)            { showErr('r-err', 'La contraseña debe tener al menos 6 caracteres.'); return; }
+
+  let finca_id, finca_nombre;
+
+  if (fincaMode === 'crear') {
+    finca_nombre = document.getElementById('r-finca-nombre').value.trim();
+    if (!finca_nombre) { showErr('r-err', 'Escribe el nombre de tu finca.'); return; }
+    // Generar código único para la finca
+    finca_id = 'FINCA-' + Math.random().toString(36).toUpperCase().slice(2,8);
+  } else {
+    finca_id = document.getElementById('r-finca-codigo').value.trim().toUpperCase();
+    if (!finca_id) { showErr('r-err', 'Ingresa el código de la finca.'); return; }
+    finca_nombre = finca_id;
+  }
+
+  const res = await api({action:'register', nombre, email, password:pass, finca_id, finca_nombre}, 'Creando cuenta…');
+  if (!res.ok) { showErr('r-err', res.error); return; }
+
+  session = res.user;
+  localStorage.setItem('gapp_session', JSON.stringify(session));
+
+  if (fincaMode === 'crear') {
+    alert(`✅ ¡Cuenta creada! Eres el administrador.\n\nTu código de finca es:\n👉 ${finca_id}\n\nCompártelo con tu equipo para que se unan como lectores.`);
+  }
+
+  applySession();
+  await cargarVacas();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SESSION
+// ═══════════════════════════════════════════════════════
+function applySession() {
+  document.getElementById('main-nav').style.display = 'flex';
+  document.getElementById('nav-user').textContent   = session.nombre;
+  document.getElementById('nav-finca').textContent  = '🏡 ' + session.finca_nombre;
+  const b = document.getElementById('role-badge');
+  b.textContent = session.rol === 'admin' ? '⚙ Admin' : '👁 Lector';
+  b.className   = 'role-badge ' + (session.rol==='admin' ? 'role-admin' : 'role-lector');
+}
+function cerrarSesion() {
+  session = null; vacasCache = []; curId = null;
+  localStorage.removeItem('gapp_session');
+  document.getElementById('main-nav').style.display = 'none';
+  location.hash = '';
+  showView('view-auth');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CARGAR VACAS DESDE API
+// ═══════════════════════════════════════════════════════
+async function cargarVacas() {
+  setSyncStatus('loading', 'Sincronizando con Google Sheets…');
+  const res = await api({action:'getVacas', finca_id: session.finca_id}, 'Cargando ganado…');
+  if (!res.ok) {
+    setSyncStatus('err', 'Error de conexión — mostrando datos locales');
+  } else {
+    vacasCache = res.vacas || [];
+    localStorage.setItem('gapp_cache', JSON.stringify(vacasCache));
+    setSyncStatus('ok', `Sincronizado — ${vacasCache.length} animales`);
+  }
+  renderDash();
+  showView('view-dash');
+}
+
+function setSyncStatus(state, msg) {
+  const bar = document.getElementById('sync-bar');
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-msg');
+  bar.style.display = 'flex';
+  txt.textContent = msg;
+  dot.className = 'sync-dot sync-' + state;
+}
+
+// ═══════════════════════════════════════════════════════
 //  NAVEGACIÓN
-// ─────────────────────────────────────────
-function showView(id){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+// ═══════════════════════════════════════════════════════
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
 }
-function showDash(){ location.hash=''; renderDash(); showView('view-dash'); }
+function showDash()   { location.hash=''; renderDash(); showView('view-dash'); }
+function showLoading(msg) { document.getElementById('loading-msg').textContent=msg||'Cargando…'; document.getElementById('loading').classList.add('show'); }
+function hideLoading()    { document.getElementById('loading').classList.remove('show'); }
+function closeM(id)       { document.getElementById(id).classList.remove('show'); }
 
-function showNueva(){
+function showNueva() {
   document.getElementById('f-id').value='';
   document.getElementById('form-title').textContent='Nueva Vaca';
-  ['f-nombre','f-raza','f-edad','f-embarazos','f-desparasitacion','f-peso','f-leche','f-vacunas','f-enfermedades','f-notas']
-    .forEach(id=>document.getElementById(id).value='');
+  ['f-nombre','f-raza','f-edad','f-embarazos','f-desparasitacion','f-peso','f-leche','f-vacunas','f-enfermedades','f-notas'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-estado').value='normal';
   showView('view-form');
 }
-function showEditar(id){
-  const v=get().find(x=>x.id===id); if(!v) return;
+function showEditar(id) {
+  const v=vacasCache.find(x=>x.id===id); if(!v) return;
   const l=last(v);
   document.getElementById('f-id').value=id;
   document.getElementById('form-title').textContent='Editar: '+v.nombre;
@@ -742,55 +841,47 @@ function showEditar(id){
   ['f-vacunas','f-enfermedades'].forEach(id=>document.getElementById(id).value='');
   showView('view-form');
 }
-function showPerf(id, tab=0){
+function showPerf(id, tab=0) {
   curId=id; activeTab=tab;
   location.hash='#v/'+id;
-  const vacas=get(); const v=vacas.find(x=>x.id===id);
-  if(!v){ showDash(); return; }
+  const v=vacasCache.find(x=>x.id===id); if(!v){showDash();return;}
   const l=last(v);
+  const isA=session&&session.rol==='admin';
 
   document.getElementById('p-id').textContent=v.id;
   document.getElementById('p-nombre').textContent=v.nombre;
-  document.getElementById('p-sub').textContent=(v.raza?'🐄 '+v.raza:'')+(l&&l.edad?'  ·  '+l.edad+' años':'');
+  document.getElementById('p-sub').textContent=(v.raza?'🐄 '+v.raza:'')+(l&&l.edad?' · '+l.edad+' años':'');
+  document.getElementById('p-btns').innerHTML=isA
+    ?`<button class="btn btn-ghost btn-sm" onclick="showEditar('${id}')">✏ Editar</button>
+      <button class="btn btn-sm" style="background:rgba(220,38,38,.2);border-color:rgba(255,255,255,.35);color:#fff" onclick="delVaca('${id}')">✕ Eliminar</button>`:'';
 
-  document.getElementById('p-btns').innerHTML = role==='admin'
-    ? `<button class="btn btn-ghost btn-sm" onclick="showEditar('${id}')">✏ Editar</button>
-       <button class="btn btn-sm" style="background:rgba(220,38,38,.2);border-color:rgba(255,255,255,.35);color:#fff" onclick="delVaca('${id}')">✕ Eliminar</button>`
-    : '';
-
-  // Stats
-  const s = l ? (ESTADOS[l.estado]||ESTADOS.normal) : ESTADOS.normal;
+  const s=l?(ESTADOS[l.estado]||ESTADOS.normal):ESTADOS.normal;
   document.getElementById('p-stats').innerHTML=`
     <div class="cs"><div class="cs-v">${l?l.peso:'—'}</div><div class="cs-u">kg</div><div class="cs-l">Peso actual</div></div>
     <div class="cs"><div class="cs-v">${l?l.leche:'—'}</div><div class="cs-u">L/día</div><div class="cs-l">Leche</div></div>
-    <div class="cs cs-big" style="text-align:center">${estadoBadge(l?l.estado:'normal')}<div class="cs-l" style="margin-top:6px">Estado fisiológico</div></div>
+    <div class="cs cs-big">${estadoBadge(l?l.estado:'normal')}<div class="cs-l" style="margin-top:6px">Estado fisiológico</div></div>
     <div class="cs"><div class="cs-v">${v.embarazos??'—'}</div><div class="cs-u">partos</div><div class="cs-l">Embarazos</div></div>
     <div class="cs" style="font-size:.78rem"><div style="font-weight:600;color:var(--verde)">${v.ultimaDesp?fmtDate(v.ultimaDesp):'—'}</div><div class="cs-l" style="margin-top:4px">Última desparasitación</div></div>
     <div class="cs"><div class="cs-v">${(v.vacunas||[]).length}</div><div class="cs-u">aplicadas</div><div class="cs-l">Vacunas</div></div>
     <div class="cs"><div class="cs-v">${(v.enfermedades||[]).length}</div><div class="cs-u">registros</div><div class="cs-l">Enfermedades</div></div>
   `;
 
-  // Botones de tab
-  document.getElementById('add-reg-btn').innerHTML = role==='admin'
-    ? `<button class="btn btn-p btn-sm" onclick="openReg()">+ Nuevo registro</button>`:'';
-  document.getElementById('add-vac-btn').innerHTML = role==='admin'
-    ? `<button class="btn btn-p btn-sm" onclick="openVac()">+ Agregar vacuna</button>`:'';
-  document.getElementById('add-enf-btn').innerHTML = role==='admin'
-    ? `<button class="btn btn-p btn-sm" onclick="openEnf()">+ Registrar enfermedad</button>`:'';
+  document.getElementById('add-reg-btn').innerHTML=isA?`<button class="btn btn-p btn-sm" onclick="openReg()">+ Nuevo registro</button>`:'';
+  document.getElementById('add-vac-btn').innerHTML=isA?`<button class="btn btn-p btn-sm" onclick="openVac()">+ Agregar vacuna</button>`:'';
+  document.getElementById('add-enf-btn').innerHTML=isA?`<button class="btn btn-p btn-sm" onclick="openEnf()">+ Registrar enfermedad</button>`:'';
 
   renderHist(v); renderCharts(v); renderVacunas(v); renderEnfermedades(v); renderChapetaPrev(v);
-
   document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===activeTab));
   document.querySelectorAll('.tab-panel').forEach((p,i)=>p.classList.toggle('active',i===activeTab));
   showView('view-perf');
 }
-function switchTab(i){
+function switchTab(i) {
   activeTab=i;
   document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',j===i));
   document.querySelectorAll('.tab-panel').forEach((p,j)=>p.classList.toggle('active',j===i));
 }
-function showChapeta(){
-  const v=get().find(x=>x.id===curId); if(!v) return;
+function showChapeta() {
+  const v=vacasCache.find(x=>x.id===curId); if(!v) return;
   const l=last(v); const s=l?(ESTADOS[l.estado]||ESTADOS.normal):ESTADOS.normal;
   document.getElementById('a-name').textContent=v.nombre;
   document.getElementById('a-tagid').textContent=v.id;
@@ -805,36 +896,31 @@ function showChapeta(){
   showView('view-chapeta');
 }
 
-// ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
 //  RENDER DASHBOARD
-// ─────────────────────────────────────────
-function renderDash(){
-  const vacas=get(); const isA=role==='admin';
-  document.getElementById('admin-head-btn').innerHTML=isA
-    ?`<button class="btn btn-p" onclick="showNueva()">+ Nueva vaca</button>`:'';
-
-  const ws=vacas.map(v=>{const l=last(v);return l?l.peso:0;}).filter(Boolean);
+// ═══════════════════════════════════════════════════════
+function renderDash() {
+  const isA=session&&session.rol==='admin';
+  document.getElementById('admin-head-btn').innerHTML=isA?`<button class="btn btn-p btn-sm" onclick="showNueva()">+ Nueva vaca</button>`:'';
+  const ws=vacasCache.map(v=>{const l=last(v);return l?l.peso:0;}).filter(Boolean);
   const avgW=ws.length?Math.round(ws.reduce((a,b)=>a+b,0)/ws.length):0;
-  const enCelo=vacas.filter(v=>{const l=last(v);return l&&l.estado==='celo';}).length;
-  const emb=vacas.filter(v=>{const l=last(v);return l&&l.estado==='embarazada';}).length;
-
+  const enCelo=vacasCache.filter(v=>{const l=last(v);return l&&l.estado==='celo';}).length;
+  const emb=vacasCache.filter(v=>{const l=last(v);return l&&l.estado==='embarazada';}).length;
   document.getElementById('stats-grid').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total animales</div><div class="stat-value">${vacas.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total animales</div><div class="stat-value">${vacasCache.length}</div></div>
     <div class="stat-card"><div class="stat-label">Peso promedio</div><div class="stat-value">${avgW}<span style="font-size:1rem;color:var(--gris)"> kg</span></div></div>
     <div class="stat-card"><div class="stat-label">En celo 🟡</div><div class="stat-value">${enCelo}</div></div>
     <div class="stat-card"><div class="stat-label">Embarazadas 🩷</div><div class="stat-value">${emb}</div></div>
   `;
-
   const g=document.getElementById('cattle-grid');
-  if(!vacas.length){
+  if(!vacasCache.length){
     g.innerHTML=`<div class="empty"><div style="font-size:2.8rem;margin-bottom:.75rem">🐄</div>
       <div style="font-size:1.1rem;font-weight:500;margin-bottom:.4rem">Sin animales registrados</div>
       <p style="font-size:.88rem;margin:.4rem 0 1.25rem">Agrega tu primer animal para comenzar</p>
-      ${isA?'<button class="btn btn-p" onclick="showNueva()">+ Agregar primer animal</button>':''}
-    </div>`;
-    return;
+      ${isA?'<button class="btn btn-p btn-sm" onclick="showNueva()">+ Agregar primer animal</button>':''}
+    </div>`;return;
   }
-  g.innerHTML=vacas.map(v=>{
+  g.innerHTML=vacasCache.map(v=>{
     const l=last(v); const s=l?(ESTADOS[l.estado]||ESTADOS.normal):ESTADOS.normal;
     return `<div class="cc" onclick="showPerf('${v.id}')">
       <div class="cc-head">
@@ -860,53 +946,234 @@ function renderDash(){
   }).join('');
 }
 
-// ─────────────────────────────────────────
-//  RENDER HISTORIAL
-// ─────────────────────────────────────────
-function renderHist(v){
+// ═══════════════════════════════════════════════════════
+//  RENDER SECCIONES
+// ═══════════════════════════════════════════════════════
+function renderHist(v) {
   const tbody=document.getElementById('hist-tbody');
   const noH=document.getElementById('no-hist');
   const regs=(v.registros||[]).slice().reverse();
-  if(!regs.length){ tbody.innerHTML=''; noH.style.display='block'; return; }
+  if(!regs.length){tbody.innerHTML='';noH.style.display='block';return;}
   noH.style.display='none';
   tbody.innerHTML=regs.map((r,i)=>{
     const prev=regs[i+1];
     return `<tr>
       <td>${fmtDate(r.fecha)}</td>
       <td>${r.edad??'—'} años</td>
-      <td>${r.peso} kg${prev?badge(r.peso,prev.peso,'kg'):''}</td>
-      <td>${r.leche??'—'} L${prev&&r.leche&&prev.leche?badge(r.leche,prev.leche,'L'):''}</td>
+      <td>${r.peso} kg${prev?trend(r.peso,prev.peso,'kg'):''}</td>
+      <td>${r.leche??'—'} L${prev&&r.leche&&prev.leche?trend(r.leche,prev.leche,'L'):''}</td>
       <td>${estadoBadge(r.estado)}</td>
       <td style="color:var(--gris);font-size:.82rem">${r.notas||'—'}</td>
     </tr>`;
   }).join('');
 }
-
-// ─────────────────────────────────────────
-//  GRÁFICAS
-// ─────────────────────────────────────────
-function renderCharts(v){
+function renderVacunas(v) {
+  const el=document.getElementById('vacunas-list');
+  const vacs=v.vacunas||[];
+  if(!vacs.length){el.innerHTML=`<div class="empty-sec">💉 Sin vacunas registradas aún</div>`;return;}
+  const isA=session&&session.rol==='admin';
+  el.innerHTML=vacs.map((va,i)=>`
+    <div class="list-item">
+      <div class="li-main">
+        <div class="li-name"><span class="badge b-vacuna">💉 ${va.nombre}</span></div>
+        <div class="li-sub">Aplicada: ${fmtDate(va.fecha)}${va.proxima?' · Próxima: '+fmtDate(va.proxima):''}${va.lote?' · '+va.lote:''}</div>
+      </div>
+      ${isA?`<div class="li-acts"><button class="btn btn-d btn-xs" onclick="delVacuna(${i})">✕</button></div>`:''}
+    </div>`).join('');
+}
+function renderEnfermedades(v) {
+  const el=document.getElementById('enf-list');
+  const enfs=v.enfermedades||[];
+  if(!enfs.length){el.innerHTML=`<div class="empty-sec">🏥 Sin enfermedades registradas</div>`;return;}
+  const isA=session&&session.rol==='admin';
+  el.innerHTML=enfs.map((e,i)=>`
+    <div class="list-item">
+      <div class="li-main">
+        <div class="li-name"><span class="badge ${e.estado==='resuelta'?'b-enf-ok':'b-enf-activa'}">${e.estado==='resuelta'?'✅':'🔴'} ${e.nombre}</span></div>
+        <div class="li-sub">Diagnóstico: ${fmtDate(e.fecha)}${e.trat?' · Tratamiento: '+e.trat:''}</div>
+      </div>
+      ${isA?`<div class="li-acts">
+        ${e.estado==='activa'?`<button class="btn btn-s btn-xs" onclick="marcarResuelta(${i})">✔ Resuelta</button>`:''}
+        <button class="btn btn-d btn-xs" onclick="delEnf(${i})">✕</button>
+      </div>`:''}
+    </div>`).join('');
+}
+function renderCharts(v) {
   const cg=document.getElementById('charts-grid');
   const regs=v.registros||[];
-  if(regs.length<2){ cg.innerHTML=''; return; }
+  if(regs.length<2){cg.innerHTML='';return;}
   cg.innerHTML=[
-    {k:'peso',  l:'Evolución de Peso (kg)',         c:'#1A3D2B'},
-    {k:'leche', l:'Producción de Leche (L/día)',    c:'#C4622D'},
-  ].map(({k,l,c})=>`
-    <div class="mini-chart">
-      <div class="mc-title">${l}</div>
-      ${lineChart(regs,k,c)}
-    </div>
-  `).join('');
+    {k:'peso', l:'Evolución de Peso (kg)',      c:'#1A3D2B'},
+    {k:'leche',l:'Producción de Leche (L/día)', c:'#C4622D'},
+  ].map(({k,l,c})=>`<div class="mini-chart"><div class="mc-title">${l}</div>${lineChart(regs,k,c)}</div>`).join('');
 }
-function lineChart(regs, key, color){
+function renderChapetaPrev(v) {
+  document.getElementById('prev-name').textContent=v.nombre;
+  document.getElementById('prev-tagid').textContent=v.id;
+  const qc=document.getElementById('prev-qr'); qc.innerHTML='';
+  makeQR(qc,v.id,62);
+}
+
+// ═══════════════════════════════════════════════════════
+//  CRUD VACAS
+// ═══════════════════════════════════════════════════════
+async function saveVaca() {
+  const id=document.getElementById('f-id').value;
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!nombre){alert('El nombre es obligatorio');return;}
+
+  const peso=parseFloat(document.getElementById('f-peso').value);
+  const leche=parseFloat(document.getElementById('f-leche').value);
+  const edad=parseFloat(document.getElementById('f-edad').value);
+  const estado=document.getElementById('f-estado').value;
+  const notas=document.getElementById('f-notas').value.trim();
+  const vacasTxt=document.getElementById('f-vacunas').value.trim();
+  const enfTxt=document.getElementById('f-enfermedades').value.trim();
+
+  const newReg=!isNaN(peso)?{fecha:today(),edad:isNaN(edad)?null:edad,peso,leche:isNaN(leche)?0:leche,estado,notas:notas||'Registro'}:null;
+
+  let vaca;
+  if(id){
+    vaca=vacasCache.find(v=>v.id===id);
+    if(!vaca) return;
+    vaca={...vaca,nombre,raza:document.getElementById('f-raza').value.trim(),
+      embarazos:parseInt(document.getElementById('f-embarazos').value)||vaca.embarazos,
+      ultimaDesp:document.getElementById('f-desparasitacion').value||vaca.ultimaDesp,
+      notas:notas||vaca.notas,
+      registros:newReg?[...(vaca.registros||[]),newReg]:vaca.registros
+    };
+  } else {
+    const initVacs=vacasTxt?vacasTxt.split(',').map(s=>({nombre:s.trim(),fecha:today(),proxima:'',lote:''})).filter(v=>v.nombre):[];
+    const initEnfs=enfTxt?enfTxt.split(',').map(s=>({nombre:s.trim(),fecha:today(),estado:'activa',trat:''})).filter(e=>e.nombre):[];
+    vaca={
+      id:uid(),nombre,raza:document.getElementById('f-raza').value.trim(),
+      embarazos:parseInt(document.getElementById('f-embarazos').value)||0,
+      ultimaDesp:document.getElementById('f-desparasitacion').value||'',
+      notas,vacunas:initVacs,enfermedades:initEnfs,
+      registros:newReg?[newReg]:[]
+    };
+  }
+
+  const res=await api({action:'saveVaca',finca_id:session.finca_id,vaca},'Guardando animal…');
+  if(!res.ok){alert('Error: '+res.error);return;}
+
+  // Actualizar cache
+  const idx=vacasCache.findIndex(v=>v.id===vaca.id);
+  if(idx!==-1) vacasCache[idx]=vaca; else vacasCache.push(vaca);
+  localStorage.setItem('gapp_cache',JSON.stringify(vacasCache));
+  showDash();
+}
+
+function delVaca(id){delId=id;document.getElementById('modal-del').classList.add('show');}
+async function confirmDel(){
+  if(!delId) return;
+  const res=await api({action:'deleteVaca',finca_id:session.finca_id,vaca_id:delId},'Eliminando…');
+  if(!res.ok){alert('Error: '+res.error);return;}
+  vacasCache=vacasCache.filter(v=>v.id!==delId);
+  localStorage.setItem('gapp_cache',JSON.stringify(vacasCache));
+  delId=null;closeM('modal-del');showDash();
+}
+
+// ── Actualizar vaca en API + cache ──────────────────────
+async function actualizarVaca(vaca) {
+  const res=await api({action:'saveVaca',finca_id:session.finca_id,vaca},'Guardando…');
+  if(!res.ok){alert('Error: '+res.error);return false;}
+  const idx=vacasCache.findIndex(v=>v.id===vaca.id);
+  if(idx!==-1) vacasCache[idx]=vaca;
+  localStorage.setItem('gapp_cache',JSON.stringify(vacasCache));
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════
+//  REGISTROS
+// ═══════════════════════════════════════════════════════
+function openReg(){
+  ['rg-peso','rg-leche','rg-notas','rg-edad'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('rg-estado').value='normal';
+  document.getElementById('rg-fecha').value=today();
+  document.getElementById('modal-reg').classList.add('show');
+}
+async function saveReg(){
+  const peso=parseFloat(document.getElementById('rg-peso').value);
+  const leche=parseFloat(document.getElementById('rg-leche').value);
+  const edad=parseFloat(document.getElementById('rg-edad').value);
+  const estado=document.getElementById('rg-estado').value;
+  const fecha=document.getElementById('rg-fecha').value;
+  const notas=document.getElementById('rg-notas').value.trim();
+  if(isNaN(peso)||!fecha){alert('El peso y la fecha son obligatorios.');return;}
+  const vaca=vacasCache.find(v=>v.id===curId); if(!vaca) return;
+  const updated={...vaca,registros:[...(vaca.registros||[]),{fecha,edad:isNaN(edad)?null:edad,peso,leche:isNaN(leche)?0:leche,estado,notas}]};
+  if(await actualizarVaca(updated)){closeM('modal-reg');showPerf(curId,0);}
+}
+
+// ═══════════════════════════════════════════════════════
+//  VACUNAS
+// ═══════════════════════════════════════════════════════
+function openVac(){
+  ['v-nombre','v-lote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('v-fecha').value=today();
+  document.getElementById('v-proxima').value='';
+  document.getElementById('modal-vac').classList.add('show');
+}
+async function saveVacuna(){
+  const nombre=document.getElementById('v-nombre').value.trim();
+  const fecha=document.getElementById('v-fecha').value;
+  if(!nombre||!fecha){alert('El nombre y la fecha son obligatorios.');return;}
+  const vaca=vacasCache.find(v=>v.id===curId); if(!vaca) return;
+  const updated={...vaca,vacunas:[...(vaca.vacunas||[]),{nombre,fecha,proxima:document.getElementById('v-proxima').value,lote:document.getElementById('v-lote').value.trim()}]};
+  if(await actualizarVaca(updated)){closeM('modal-vac');showPerf(curId,1);}
+}
+async function delVacuna(i){
+  const vaca=vacasCache.find(v=>v.id===curId); if(!vaca) return;
+  const updated={...vaca,vacunas:vaca.vacunas.filter((_,j)=>j!==i)};
+  if(await actualizarVaca(updated)) renderVacunas(updated);
+}
+
+// ═══════════════════════════════════════════════════════
+//  ENFERMEDADES
+// ═══════════════════════════════════════════════════════
+function openEnf(){
+  ['e-nombre','e-trat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('e-fecha').value=today();
+  document.getElementById('e-estado').value='activa';
+  document.getElementById('modal-enf').classList.add('show');
+}
+async function saveEnf(){
+  const nombre=document.getElementById('e-nombre').value.trim();
+  const fecha=document.getElementById('e-fecha').value;
+  if(!nombre||!fecha){alert('El nombre y la fecha son obligatorios.');return;}
+  const vaca=vacasCache.find(v=>v.id===curId); if(!vaca) return;
+  const updated={...vaca,enfermedades:[...(vaca.enfermedades||[]),{nombre,fecha,estado:document.getElementById('e-estado').value,trat:document.getElementById('e-trat').value.trim()}]};
+  if(await actualizarVaca(updated)){closeM('modal-enf');showPerf(curId,2);}
+}
+async function delEnf(i){
+  const vaca=vacasCache.find(v=>v.id===curId); if(!vaca) return;
+  const updated={...vaca,enfermedades:vaca.enfermedades.filter((_,j)=>j!==i)};
+  if(await actualizarVaca(updated)) renderEnfermedades(updated);
+}
+async function marcarResuelta(i){
+  const vaca=vacasCache.find(v=>v.id===curId); if(!vaca) return;
+  const enfs=[...vaca.enfermedades];
+  enfs[i]={...enfs[i],estado:'resuelta'};
+  const updated={...vaca,enfermedades:enfs};
+  if(await actualizarVaca(updated)) renderEnfermedades(updated);
+}
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+const last    = v => v.registros&&v.registros.length?v.registros[v.registros.length-1]:null;
+const uid     = ()=> 'VAC-'+Math.random().toString(36).toUpperCase().slice(2,8);
+const today   = ()=> new Date().toISOString().split('T')[0];
+const fmtDate = s => { if(!s) return '—'; return new Date(s+'T12:00:00').toLocaleDateString('es-CO',{year:'numeric',month:'short',day:'numeric'}); };
+const estadoBadge = e => { const s=ESTADOS[e]||ESTADOS.normal; return `<span class="badge ${s.cls}">${s.icon} ${s.label}</span>`; };
+const trend   = (cur,prev,u) => { const d=cur-prev; if(d>0) return `<span class="trend t-up">▲ +${d} ${u}</span>`; if(d<0) return `<span class="trend t-dn">▼ ${d} ${u}</span>`; return `<span class="trend t-eq">= igual</span>`; };
+
+function lineChart(regs,key,color){
   const W=230,H=85,P=14;
   const vals=regs.map(r=>r[key]??0);
   const mn=Math.min(...vals),mx=Math.max(...vals),rng=mx-mn||1;
-  const pts=vals.map((v,i)=>({
-    x:P+i/(vals.length-1)*(W-P*2),
-    y:H-P-(v-mn)/rng*(H-P*2), v
-  }));
+  const pts=vals.map((v,i)=>({x:P+i/(vals.length-1)*(W-P*2),y:H-P-(v-mn)/rng*(H-P*2),v}));
   const path=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
   const fill=path+` L${pts[pts.length-1].x.toFixed(1)},${H-P} L${P},${H-P} Z`;
   const lp=pts[pts.length-1];
@@ -922,214 +1189,20 @@ function lineChart(regs, key, color){
   </svg>`;
 }
 
-// ─────────────────────────────────────────
-//  RENDER VACUNAS
-// ─────────────────────────────────────────
-function renderVacunas(v){
-  const el=document.getElementById('vacunas-list');
-  const vacs=v.vacunas||[];
-  if(!vacs.length){ el.innerHTML=`<div class="empty-sec">💉 Sin vacunas registradas aún</div>`; return; }
-  el.innerHTML=vacs.map((va,i)=>`
-    <div class="list-item">
-      <div class="li-main">
-        <div class="li-name"><span class="badge b-vacuna">💉 ${va.nombre}</span></div>
-        <div class="li-sub">
-          Aplicada: ${fmtDate(va.fecha)}
-          ${va.proxima?` &nbsp;·&nbsp; Próxima dosis: ${fmtDate(va.proxima)}`:''}
-          ${va.lote?` &nbsp;·&nbsp; ${va.lote}`:''}
-        </div>
-      </div>
-      ${role==='admin'?`<div class="li-acts"><button class="btn btn-d btn-xs" onclick="delVacuna(${i})">✕</button></div>`:''}
-    </div>
-  `).join('');
-}
-
-// ─────────────────────────────────────────
-//  RENDER ENFERMEDADES
-// ─────────────────────────────────────────
-function renderEnfermedades(v){
-  const el=document.getElementById('enf-list');
-  const enfs=v.enfermedades||[];
-  if(!enfs.length){ el.innerHTML=`<div class="empty-sec">🏥 Sin enfermedades registradas</div>`; return; }
-  el.innerHTML=enfs.map((e,i)=>`
-    <div class="list-item">
-      <div class="li-main">
-        <div class="li-name">
-          <span class="badge ${e.estado==='resuelta'?'b-enf-ok':'b-enf-activa'}">
-            ${e.estado==='resuelta'?'✅':'🔴'} ${e.nombre}
-          </span>
-        </div>
-        <div class="li-sub">
-          Diagnóstico: ${fmtDate(e.fecha)}
-          ${e.trat?` &nbsp;·&nbsp; Tratamiento: ${e.trat}`:''}
-        </div>
-      </div>
-      ${role==='admin'?`
-        <div class="li-acts">
-          ${e.estado==='activa'?`<button class="btn btn-s btn-xs" onclick="marcarResuelta(${i})">✔ Resuelta</button>`:''}
-          <button class="btn btn-d btn-xs" onclick="delEnf(${i})">✕</button>
-        </div>`:''}
-    </div>
-  `).join('');
-}
-
-// ─────────────────────────────────────────
-//  RENDER CHAPETA PREVIEW
-// ─────────────────────────────────────────
-function renderChapetaPrev(v){
-  document.getElementById('prev-name').textContent=v.nombre;
-  document.getElementById('prev-tagid').textContent=v.id;
-  const qc=document.getElementById('prev-qr'); qc.innerHTML='';
-  makeQR(qc, v.id, 62);
-}
-function makeQR(container, vacaId, size){
+function makeQR(container,vacaId,size){
   const url=location.href.split('#')[0]+'#v/'+vacaId;
-  try{
-    new QRCode(container,{text:url,width:size,height:size,colorDark:'#4A2E00',colorLight:'#FFD700',correctLevel:QRCode.CorrectLevel.M});
-  } catch(e){
-    container.innerHTML=`<div style="width:${size}px;height:${size}px;background:#FFD700;display:flex;align-items:center;justify-content:center;font-size:.55rem;color:#4A2E00">QR</div>`;
-  }
+  try{new QRCode(container,{text:url,width:size,height:size,colorDark:'#4A2E00',colorLight:'#FFD700',correctLevel:QRCode.CorrectLevel.M});}
+  catch(e){container.innerHTML=`<div style="width:${size}px;height:${size}px;background:#FFD700;display:flex;align-items:center;justify-content:center;font-size:.55rem;color:#4A2E00">QR</div>`;}
 }
-
-// ─────────────────────────────────────────
-//  CRUD VACAS
-// ─────────────────────────────────────────
-function saveVaca(){
-  const id=document.getElementById('f-id').value;
-  const nombre=document.getElementById('f-nombre').value.trim();
-  if(!nombre){ alert('El nombre es obligatorio'); return; }
-
-  const peso=parseFloat(document.getElementById('f-peso').value);
-  const leche=parseFloat(document.getElementById('f-leche').value);
-  const estado=document.getElementById('f-estado').value;
-  const edad=parseFloat(document.getElementById('f-edad').value);
-  const notas=document.getElementById('f-notas').value.trim();
-  const vacasTxt=document.getElementById('f-vacunas').value.trim();
-  const enfTxt=document.getElementById('f-enfermedades').value.trim();
-  const vacas=get();
-
-  const newReg=!isNaN(peso)?{
-    fecha:today(), edad:isNaN(edad)?null:edad,
-    peso, leche:isNaN(leche)?0:leche,
-    estado, notas:notas||'Registro'
-  }:null;
-
-  if(id){
-    const idx=vacas.findIndex(v=>v.id===id);
-    if(idx!==-1){
-      vacas[idx].nombre=nombre;
-      vacas[idx].raza=document.getElementById('f-raza').value.trim();
-      vacas[idx].embarazos=parseInt(document.getElementById('f-embarazos').value)||vacas[idx].embarazos;
-      vacas[idx].ultimaDesp=document.getElementById('f-desparasitacion').value||vacas[idx].ultimaDesp;
-      vacas[idx].notas=notas||vacas[idx].notas;
-      if(newReg) vacas[idx].registros.push(newReg);
-    }
-  } else {
-    const initVacs=vacasTxt?vacasTxt.split(',').map(s=>({nombre:s.trim(),fecha:today(),proxima:'',lote:''})).filter(v=>v.nombre):[];
-    const initEnfs=enfTxt?enfTxt.split(',').map(s=>({nombre:s.trim(),fecha:today(),estado:'activa',trat:''})).filter(e=>e.nombre):[];
-    vacas.push({
-      id:uid(), nombre,
-      raza:document.getElementById('f-raza').value.trim(),
-      embarazos:parseInt(document.getElementById('f-embarazos').value)||0,
-      ultimaDesp:document.getElementById('f-desparasitacion').value||'',
-      notas, vacunas:initVacs, enfermedades:initEnfs,
-      registros:newReg?[newReg]:[]
-    });
-  }
-  save(vacas); showDash();
-}
-function delVaca(id){ delId=id; document.getElementById('modal-del').classList.add('show'); }
-function confirmDel(){
-  if(!delId) return;
-  save(get().filter(v=>v.id!==delId));
-  delId=null; closeM('modal-del'); showDash();
-}
-
-// ─────────────────────────────────────────
-//  CRUD REGISTROS
-// ─────────────────────────────────────────
-function openReg(){
-  ['r-peso','r-leche','r-notas','r-edad'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('r-estado').value='normal';
-  document.getElementById('r-fecha').value=today();
-  document.getElementById('modal-reg').classList.add('show');
-}
-function saveReg(){
-  const peso=parseFloat(document.getElementById('r-peso').value);
-  const leche=parseFloat(document.getElementById('r-leche').value);
-  const edad=parseFloat(document.getElementById('r-edad').value);
-  const estado=document.getElementById('r-estado').value;
-  const fecha=document.getElementById('r-fecha').value;
-  const notas=document.getElementById('r-notas').value.trim();
-  if(isNaN(peso)||!fecha){ alert('El peso y la fecha son obligatorios.'); return; }
-  const vacas=get(); const idx=vacas.findIndex(v=>v.id===curId); if(idx===-1) return;
-  vacas[idx].registros.push({fecha, edad:isNaN(edad)?null:edad, peso, leche:isNaN(leche)?0:leche, estado, notas});
-  save(vacas); closeM('modal-reg'); showPerf(curId,0);
-}
-
-// ─────────────────────────────────────────
-//  CRUD VACUNAS
-// ─────────────────────────────────────────
-function openVac(){
-  ['v-nombre','v-lote'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('v-fecha').value=today();
-  document.getElementById('v-proxima').value='';
-  document.getElementById('modal-vac').classList.add('show');
-}
-function saveVacuna(){
-  const nombre=document.getElementById('v-nombre').value.trim();
-  const fecha=document.getElementById('v-fecha').value;
-  if(!nombre||!fecha){ alert('El nombre y la fecha son obligatorios.'); return; }
-  const vacas=get(); const idx=vacas.findIndex(v=>v.id===curId); if(idx===-1) return;
-  if(!vacas[idx].vacunas) vacas[idx].vacunas=[];
-  vacas[idx].vacunas.push({nombre, fecha, proxima:document.getElementById('v-proxima').value, lote:document.getElementById('v-lote').value.trim()});
-  save(vacas); closeM('modal-vac'); showPerf(curId,1);
-}
-function delVacuna(i){
-  const vacas=get(); const idx=vacas.findIndex(v=>v.id===curId); if(idx===-1) return;
-  vacas[idx].vacunas.splice(i,1); save(vacas); renderVacunas(vacas[idx]);
-}
-
-// ─────────────────────────────────────────
-//  CRUD ENFERMEDADES
-// ─────────────────────────────────────────
-function openEnf(){
-  ['e-nombre','e-trat'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('e-fecha').value=today();
-  document.getElementById('e-estado').value='activa';
-  document.getElementById('modal-enf').classList.add('show');
-}
-function saveEnf(){
-  const nombre=document.getElementById('e-nombre').value.trim();
-  const fecha=document.getElementById('e-fecha').value;
-  if(!nombre||!fecha){ alert('El nombre y la fecha son obligatorios.'); return; }
-  const vacas=get(); const idx=vacas.findIndex(v=>v.id===curId); if(idx===-1) return;
-  if(!vacas[idx].enfermedades) vacas[idx].enfermedades=[];
-  vacas[idx].enfermedades.push({nombre, fecha, estado:document.getElementById('e-estado').value, trat:document.getElementById('e-trat').value.trim()});
-  save(vacas); closeM('modal-enf'); showPerf(curId,2);
-}
-function delEnf(i){
-  const vacas=get(); const idx=vacas.findIndex(v=>v.id===curId); if(idx===-1) return;
-  vacas[idx].enfermedades.splice(i,1); save(vacas); renderEnfermedades(vacas[idx]);
-}
-function marcarResuelta(i){
-  const vacas=get(); const idx=vacas.findIndex(v=>v.id===curId); if(idx===-1) return;
-  vacas[idx].enfermedades[i].estado='resuelta'; save(vacas); renderEnfermedades(vacas[idx]);
-}
-
-// ─────────────────────────────────────────
-//  UTILS
-// ─────────────────────────────────────────
-function closeM(id){ document.getElementById(id).classList.remove('show'); }
 function copyQRUrl(){
   const url=location.href.split('#')[0]+'#v/'+curId;
-  if(navigator.clipboard){ navigator.clipboard.writeText(url).then(()=>alert('URL copiada:\n'+url)); }
-  else{ prompt('URL del QR:', url); }
+  if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>alert('URL copiada:\n'+url));}
+  else{prompt('URL del QR:',url);}
 }
 function shareUrl(){
   const url=location.href.split('#')[0]+'#v/'+curId;
-  if(navigator.share){ navigator.share({title:'GanaderApp — '+curId, url}); }
-  else{ prompt('URL para compartir:', url); }
+  if(navigator.share){navigator.share({title:'GanaderApp',url});}
+  else{prompt('URL para compartir:',url);}
 }
 </script>
 </body>
